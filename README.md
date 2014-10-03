@@ -99,7 +99,7 @@ event_bus.signal(new MultiEvent(1, 'event')); // triggers both doA() and doB()
 
 TODO
 
-### Undo/Redo
+#### Undo/Redo
 
 TODO
 
@@ -120,7 +120,7 @@ then just run `$ pub get` and you'll be all set to go.
 
 __EventCommander__ has no additional/external dependencies, and is compatible with both client-side and server-side code.
 
-## Import
+### Import
 For _Event Bus_ features only:
 
 `import 'package:event_commander/event_bus.dart';`
