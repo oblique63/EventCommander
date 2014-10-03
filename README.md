@@ -19,6 +19,18 @@ event_bus.on(MyEventType, (MyEventType event) => doSomething());
 event_bus.signal(new MyEventType()); // doSomething() will be called
 ```
 
+- __EventHandler__
+  * A function that accepts an `Event`, and is meant to be called whenever an event of the appropriate type is fired.
+
+- __EventListener__
+  * `listening_to : Type` - Property that lists what type of `Event` the listener is listening to.
+
+  * `handler : EventHandler` - The `EventHandler` function that is called whenever an `event` of the type
+  specified by `listening_to` is signaled.
+
+  * `stopListening() : void` - Unregisters the listener from its corresponding `EventBus`, and stops the `handler`
+  from being called and handling future events.
+
 - __EventBus__
   * `on(Type event_type, void eventHandler(Event event)) : EventListener` -
   Registers a function (`EventHandler`) to get called whenever an event of `event_type` is signaled.
@@ -28,6 +40,16 @@ event_bus.signal(new MyEventType()); // doSomething() will be called
   Fires/propagates the event instance passed to it, and sends it to all the appropriate `EventHandlers` subscribed/listening
   to events of that type. Returns a `Future` in case some computation needs to happen after all the corresponding
   `EventHandlers` have been notified of the event.
+
+  * `stopListener(EventListener listener) : void` -
+  Same as `EventListener.stopListening()`. Unregisters an `EventHandler` function (via its corresponding `EventListener`)
+  from the `EventBus`. Stops the `EventHandler` from being called and receiving future events from this `EventBus` instance.
+
+  * `clearAllListeners() : void` -
+  Removes all `EventListeners`/`EventHandlers` from the `EventBus` instance.
+
+  * `hasListener(EventListener listener) : bool` -
+  Checks whether the given `listener` is registered with the `EventBus` instance.
 
 
 ### Events
