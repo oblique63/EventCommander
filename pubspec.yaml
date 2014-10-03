@@ -1,0 +1,5 @@
+name: event_commander
+description: An EventBus + Command Pattern / Undo-Redo library
+
+dev_dependencies:
+  unittest: any

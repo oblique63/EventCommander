@@ -1,0 +1,16 @@
+packages
+*/packages
+
+pubspec.lock
+*/pubspec.lock
+
+build
+
+# Floobits nonsense
+.floo
+.flooignore
+
+# Editor nonsense
+.idea
+*.swp
+*~
