@@ -4,6 +4,7 @@ import 'package:event_commander/event_commander.dart';
 import 'package:unittest/unittest.dart';
 
 part 'mock_events.dart';
+part 'mock_commands.dart';
 
 EventBus event_bus;
 Commander commander;
@@ -52,11 +53,14 @@ main() {
             event_bus.signal(event)
             .then((_) {
                 expectMessageCountToBe(1);
+
                 listener.stopListening();
+                expect(event_bus.hasListener(listener), isFalse);
+
                 return event_bus.signal(event);
             })
             .then((_) {
-                expectMessageCountToBe(1);
+                expectMessageCountToBe(1); // Expect no change
             });
         });
 
@@ -88,6 +92,10 @@ main() {
             .whenComplete(() {
                 expectMessageCountToBe(2);
             });
+        });
+
+        test('can support multiple Commanders', () {
+
         });
     });
 

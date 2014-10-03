@@ -2,7 +2,7 @@ part of event_commander;
 
 typedef CommandResult Command();
 
-/// A generic ReturnType can be listed, but it is only used for documentation
+/// A generic ReturnType can be listed, but it is only for documentation
 class CommandResult<ReturnType> {
     EntityState state;
     List<Event> events;

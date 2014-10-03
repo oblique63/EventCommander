@@ -24,3 +24,6 @@ class MultiEvent extends Event implements TestEvent, AlternateEvent {
         this.parents.addAll([TestEvent, AlternateEvent]);
     }
 }
+
+class CommandEvent extends Event {
+}
