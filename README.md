@@ -99,16 +99,22 @@ event_bus.signal(new MultiEvent(1, 'event')); // triggers both doA() and doB()
 
 ### Commands
 
+TODO
 
 ### Undo/Redo
 
+TODO
 
 ## Import
 For EventBus features only:
+
 `import 'package:event_commander/event_bus.dart';`
 
+
 For EventBus and Command/Undo features:
+
 `import 'package:event_commander/event_commander.dart';`
+
 
 ## Install
 
