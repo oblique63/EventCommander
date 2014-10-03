@@ -2,9 +2,7 @@ part of event_commander.test;
 
 class TestEvent extends Event {
     String description;
-    TestEvent(this.description) {
-        this.parents.add(Event);
-    }
+    TestEvent(this.description);
 }
 
 class ChildEvent extends TestEvent {
@@ -15,9 +13,7 @@ class ChildEvent extends TestEvent {
 
 class AlternateEvent extends Event {
     int number;
-    AlternateEvent(this.number) {
-        this.parents.add(Event);
-    }
+    AlternateEvent(this.number);
 }
 
 class MultiEvent extends Event implements TestEvent, AlternateEvent {

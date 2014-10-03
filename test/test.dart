@@ -81,7 +81,13 @@ main() {
         });
 
         test('can fire Multi-Events', () {
+            event_bus.on(TestEvent, (event) => event_messages.add(event.description));
+            event_bus.on(AlternateEvent, (event) => event_messages.add(event.number));
 
+            event_bus.signal(new MultiEvent(1, 'event'))
+            .whenComplete(() {
+                expectMessageCountToBe(2);
+            });
         });
     });
 
