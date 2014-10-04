@@ -246,10 +246,32 @@ Checks whether the `EntityState` contains the `property` specified, otherwise re
 * `contains(String property) : bool` -
 Checks whether the `EntityState` contains the `property` specified.
 
+* `forEach(void f(property, value))` - Iterates over each property-value pair in the `EntityState`
+
+* `properties : Set<String>` - The set of of the properties in the state
+
+* `entity : Undoable` - The object the EntityState represents.
+
 
 #### UndoRedoService
 Each `Commander` instance manages an `UndoRedoService`. If you want to be able to undo states for certain components
 separately, you should create a new `Commander` for each of the components whose state you wish to track.
+
+* `stack_size : int` - How many states are currently saved on the stack
+
+* `canUndo : bool` - Whether calling `undo()` would be a valid operation in the current state
+
+* `canRedo : bool` - Whether calling `redo()` would be a valid operation in the current state
+
+* `recordState(EntityState state) : void` - Saves an `EntityState` onto the stack. Does not need to be called directly
+when using a `Commander`
+
+* `clear() : void` - Removes all the states currently stored on the stack
+
+* `undo() : void`
+
+* `redo() : void`
+
 
 ## Install
 

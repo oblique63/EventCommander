@@ -32,7 +32,7 @@ class EntityState<UndoableType extends Undoable> {
     UndoableType get
     entity => _entity;
 
-    Set get
+    Set<String> get
     properties => _state.keys.toSet();
 
     operator
