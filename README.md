@@ -62,13 +62,13 @@ Checks whether the given `listener` is registered with the `EventBus` instance.
 that populates itself based on `Events` sent to the `EventBus`. By default, an `EventQueue` will listen to all `Events`,
 but each instance may be configured to only queue up specific event types upon creation:
 
-```dart
-var queue = new EventQueue(event_bus, queue_on: MyEvent);
+`var queue = new EventQueue(event_bus, queue_on: MyEvent);`
 
-// Alternative declaration using generics (yields same result as above)
-var queue = new EventQueue<MyEvent>(event_bus);
-// Note: Event types specified using generics will override any values passed to the 'queue_on' parameter
-```
+Alternative declaration using generics (yields same result as above):
+
+`var queue = new EventQueue<MyEvent>(event_bus);`
+
+_(Note: Event types specified using generics will override any values passed to the 'queue_on' parameter)_
 
 #### Sample usage
 ```dart
@@ -77,7 +77,8 @@ while(true) {
        Event event = event_queue.popNext();
        doSomethingWith(event);
        ...
-       // Alternatively, you do not have to remove the events from the queue to examine them:
+       // Alternatively, you do not have to remove events
+       // from the queue to examine them:
        checkEvent(event_queue.peekNext());
     }
     // break out of the loop under some condition...
@@ -180,12 +181,14 @@ Each `Commander` instance must be instantiated with the `EventBus` it will send 
 Despite it's name, this does not actually call your `Command` function (you must call it yourself, as demonstrated
 in the example above), it only propagates the result to the associated `EventBus` and logs any state changes to the
 `UndoRedoService`. It will return whatever your `Command` listed as its `return_value`, wrapped in a `Future`.
-  * __Example:__ `commander.execute(squareCommand(2)).then((result) => result == 4)` will be `true`
+
+_Example:_ `commander.execute(squareCommand(2)).then((result) => result == 4)` will be `true`
 
 * `executeSequence(List<CommandResult> results) : Future< List<dynamic> >` -
 Executes a sequence of `Commands` in the order given. Returns a `Future` with a list of each command's `return_value`
 in the order executed.
-  * __Example:__ `commander.executeSequence([squareCommand(2), squareCommand(3)])` will return `[4, 9]` inside a `Future`
+
+_Example:_ `commander.executeSequence([squareCommand(2), squareCommand(3)])` will return `[4, 9]` inside a `Future`
 
 * `event_bus : final EventBus` -
 The `EventBus` all the command events will be sent to. Will have been defined in the constructor.
@@ -231,14 +234,16 @@ Identical to default constructor, used to explicitly denote state _changes_ of a
 
 * `diff(EntityState other) : EntityState` -
 Returns an `EntityState` with the values in `other` that are different from the current instance.
-  * __Example:__
-  ```dart
-  var stateA = new EntityState(entity: my_entity, state: {'name': 'hello', 'id': 1});
-  var stateB = new EntityState(entity: my_entity, state: {'name': 'world', 'id': 1});
 
-  stateA.diff(stateB); // returns EntityState({'name': 'world'})
-  stateB.diff(stateA); // returns EntityState({'name': 'hello'})
-  ```
+_Example:_
+
+```dart
+var stateA = new EntityState(entity: my_entity, state: {'name': 'hello', 'id': 1});
+var stateB = new EntityState(entity: my_entity, state: {'name': 'world', 'id': 1});
+
+stateA.diff(stateB); // returns EntityState({'name': 'world'})
+stateB.diff(stateA); // returns EntityState({'name': 'hello'})
+```
 
 * `getOrDefaultTo(String property, dynamic default_value) : dynamic` -
 Checks whether the `EntityState` contains the `property` specified, otherwise returns the given `default_value`.
