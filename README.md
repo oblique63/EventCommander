@@ -1,6 +1,8 @@
 Event Commander
 ===============
 
+[![Build Status](https://drone.io/github.com/oblique63/EventCommander/status.png)](https://drone.io/github.com/oblique63/EventCommander/latest)
+
 An EventBus and [Command Pattern](http://en.wikipedia.org/wiki/Command_pattern), Undo-Redo library for [Dart](https://www.dartlang.org/).
 
 ##### Conventions
