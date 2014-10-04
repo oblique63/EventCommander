@@ -14,7 +14,9 @@ List<String> event_messages;
 expectMessageCountToBe(int n) => expect(event_messages, hasLength(n));
 
 
-main() {
+main() => doTests();
+
+doTests() {
     setUp(() {
         event_bus = new EventBus();
         commander = new Commander(event_bus);
@@ -22,7 +24,7 @@ main() {
         event_messages = [];
     });
 
-    group('Event Bus', () {
+    group('EventBus', () {
         test('registers Event Handler', () {
             EventHandler handler = (Event event) => event_messages.add("Something Happened!");
 
