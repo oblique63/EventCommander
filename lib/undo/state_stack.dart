@@ -55,7 +55,7 @@ class _StateStack {
     _restoreStateTo(int new_state_position) {
         var current_state = _saved_states[_state_position];
         var requested_state = _saved_states[new_state_position];
-        Undoable object = current_state._original;
+        Undoable object = current_state.entity;
         EntityState new_state = requested_state.diff(current_state);
 
         object.restoreTo(new_state);

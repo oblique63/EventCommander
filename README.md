@@ -12,7 +12,7 @@ Throughout this doc, properties/methods of classes will be listed in the followi
 
 
 ## Event Bus
-The `EventBus` is the backbone for all of the Command/Undo communication behind the scenes,
+The `EventBus` is the backbone for all of the EventQueue/Command/Undo-Redo communications behind the scenes,
 but may be used on its own to fire and listen to (a.k.a. 'publish/subscribe') Events.
 
 #### Basic usage
@@ -154,6 +154,7 @@ All the following properties of a `CommandResult` may be set in the constructor 
 
 * `return_value : dynamic` -
 The return value of a command. What will be returned in a `Future` when `Commander.execute()` is called.
+Will return `null` by default.
 
 * `events : List<Event>` -
 A list of events the command should signal. `EventListeners` registered to the `Commander`'s `event_bus`
@@ -166,6 +167,9 @@ Whether the command can be undone. If `true`, it must also assign an `EntityStat
 A snapshot of the changes made by the command on some entity/object (described further below).
 Only used when `undoable` is `true`.
 
+* `execute_first : List<CommandResult>` -
+A sequence of `CommandResults` that should be processed before the current command.
+
 
 #### Commander
 The object in charge of notifying the `EventBus` and Undo Stack of actions performed by `Commands`.
@@ -175,12 +179,12 @@ Each `Commander` instance must be instantiated with the `EventBus` it will send 
 Despite it's name, this does not actually call your `Command` function (you must call it yourself, as demonstrated
 in the example above), it only propagates the result to the associated `EventBus` and logs any state changes to the
 `UndoRedoService`. It will return whatever your `Command` listed as its `return_value`, wrapped in a `Future`.
-  * _Example:_ `commander.execute(squareCommand(2)).then((result) => result == 4)` will be `true`
+  * __Example:__ `commander.execute(squareCommand(2)).then((result) => result == 4)` will be `true`
 
 * `executeSequence(List<CommandResult> results) : Future< List<dynamic> >` -
 Executes a sequence of `Commands` in the order given. Returns a `Future` with a list of each command's `return_value`
 in the order executed.
-  * _Example:_ `commander.executeSequence([squareCommand(2), squareCommand(3)])` will return `[4, 9]` inside a `Future`
+  * __Example:__ `commander.executeSequence([squareCommand(2), squareCommand(3)])` will return `[4, 9]` inside a `Future`
 
 * `event_bus : final EventBus` -
 The `EventBus` all the command events will be sent to. Will have been defined in the constructor.
@@ -195,10 +199,52 @@ The undo service provided is a standard linear, stack-like implementation using 
 Modifications made after an `undo()` call will overwrite any possible `redo()` states.
 
 #### Undoable
-TODO
+Objects must implement the `Undoable` interface to work with the `UndoRedoService`. It only requires one method to be implemented:
+
+ `restoreTo(EntityState state) : void`
+
+This ensures that the object can understand and update itself from `EntityStates` when when requested to do so.
+
+##### Sample Usage
+```dart
+class MyEntity implements Undoable {
+    int id;
+    String description;
+    ...
+    restoreTo(EntityState state) {
+        id = state.getOrDefaultTo('id', id);
+        description = state.getOrDefaultTo('description', description);
+    }
+}
+```
 
 #### EntityState
-TODO
+The 'memento' object used to store states on the Undo Stack.
+
+* `EntityState<EntityType>({Undoable entity, Map<String, dynamic> state})` -
+Default constructor, stores the original `entity` object alongside a `Map` of its properties.
+
+* `EntityState.change(Undoable entity_object, Map<String, dynamic> state)` -
+Identical to default constructor, used to explicitly denote state _changes_ of an entity
+(i.e. only properties that have been changed should be included in the `state` map).
+
+* `diff(EntityState other) : EntityState` -
+Returns an `EntityState` with the values in `other` that are different from the current instance.
+  * __Example:__
+  ```dart
+  var stateA = new EntityState(entity: my_entity, state: {'name': 'hello', 'id': 1});
+  var stateB = new EntityState(entity: my_entity, state: {'name': 'world', 'id': 1});
+
+  stateA.diff(stateB); // returns EntityState({'name': 'world'})
+  stateB.diff(stateA); // returns EntityState({'name': 'hello'})
+  ```
+
+* `getOrDefaultTo(String property, dynamic default_value) : dynamic` -
+Checks whether the `EntityState` contains the `property` specified, otherwise returns the given `default_value`.
+
+* `contains(String property) : bool` -
+Checks whether the `EntityState` contains the `property` specified.
+
 
 #### UndoRedoService
 Each `Commander` instance manages an `UndoRedoService`. If you want to be able to undo states for certain components

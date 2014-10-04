@@ -191,24 +191,26 @@ doTests() {
     });
 
     group('Commander', () {
+        EventQueue events;
+        expectEventCountToBe(int n) => expect(events, hasLength(n));
+
         setUp(() {
-            event_bus.on(CommandEvent, (event) => event_messages.add('command'));
+            events = new EventQueue<CommandEvent>(event_bus);
         });
 
         test('fires Events from Commands', () {
             commander.execute(basicCommand())
             .whenComplete(() {
-                expectMessageCountToBe(1);
+                expectEventCountToBe(1);
             });
         });
 
         test('can assign multiple instances to an EventBus', () {
             Commander commander2 = new Commander(event_bus);
-
             commander.execute(basicCommand())
             .then((_) => commander2.execute(basicCommand()))
             .whenComplete(() {
-                expectMessageCountToBe(2);
+                expectEventCountToBe(2);
             });
         });
 
@@ -218,6 +220,35 @@ doTests() {
                 expect(result, 4);
             });
         });
+
+        test('executes sequences', () {
+            commander.executeSequence([squareCommand(2), squareCommand(3)])
+            .then((List results) {
+                expect(results[0], 4);
+                expect(results[1], 9);
+                expectEventCountToBe(2);
+            });
+        });
+
+        test('executes prerequisite commands', () {
+            var original_id = 1;
+            var test_entity = new TestEntity(original_id, 'test');
+
+            // executes 2 commands via 'execute_first' property in CommandResult
+            commander.execute(saveAndModifyId(test_entity))
+            .then((_) {
+                expectEventCountToBe(2);
+                events.clear();
+                test_entity = new TestEntity(1, 'test');
+
+                // executes 2 prerequisite commands, and fires an event for itself
+                return commander.execute(saveAndModifyIdTwice(test_entity));
+            })
+            .whenComplete(() {
+                expectEventCountToBe(3);
+                expect(test_entity.id, (original_id + 1) * 3);
+            });
+        });
     });
 
     group('UndoRedoService', () {
@@ -225,6 +256,7 @@ doTests() {
         int original_id = 1;
 
         setUp(() {
+            undo_service.clear();
             test_entity = new TestEntity(original_id, 'a test');
         });
 

@@ -14,7 +14,7 @@ class Commander {
     /// Future returns the `return_value` specified by the [CommandResult] instance
     Future<dynamic>
     execute(CommandResult command) {
-        return new Future.sync(() => _processCommandResult(command));
+        return _processCommandResult(command);
     }
 
 
@@ -24,29 +24,40 @@ class Commander {
      */
     Future<List>
     executeSequence(List<CommandResult> commands) {
-        return new Future.sync(() {
-            var results = [];
-            commands.forEach((command) => results.add( _processCommandResult(command) ));
-            return results;
-        });
+        return Future.wait(commands.map((command) => _processCommandResult(command)));
     }
 
-    dynamic
+    Future<dynamic>
     _processCommandResult(CommandResult command_result) {
-        if (command_result.undoable) {
-            if (command_result.state == null)
-                throw "Undoable command for [${_eventTypesFor(command_result).join(", ")}] must declare an EntityState in its CommandResult";
+        return _executePrerequisites(command_result)
+        .then((_) => _recordCommandState(command_result))
+        .then((_) => _signalCommandEvents(command_result))
+        .then((_) => command_result.return_value);
+    }
 
-            undo_service.recordState(command_result.state);
-        }
-        else if (command_result.state != null) {
-            throw "Non-undoable Command contained an EntityState: ${command_result.state}";
-        }
+    Future
+    _executePrerequisites(CommandResult command_result) {
+        return executeSequence(command_result.execute_first);
+    }
 
-        if (command_result.events.isNotEmpty)
-            command_result.events.forEach((event) => event_bus.signal(event));
+    Future
+    _signalCommandEvents(CommandResult command_result) {
+        return Future.forEach(command_result.events, (event) => event_bus.signal(event));
+    }
 
-        return command_result.return_value;
+    Future
+    _recordCommandState(CommandResult command_result) {
+        return new Future(() {
+            if (command_result.undoable) {
+                if (command_result.state == null)
+                    throw "Undoable command for [${_eventTypesFor(command_result).join(", ")}] must declare an EntityState in its CommandResult";
+
+                undo_service.recordState(command_result.state);
+            }
+            else if (command_result.state != null) {
+                throw "Non-undoable Command contained an EntityState: ${command_result.state}";
+            }
+        });
     }
 
     List<Type>

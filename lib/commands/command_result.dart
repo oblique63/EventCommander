@@ -12,14 +12,16 @@ typedef CommandResult Command();
  * in a [Future], but it is only for documentation
  */
 class CommandResult<ReturnType> {
-    List<Event>
+    final List<Event>
         events;
-    ReturnType
+    final ReturnType
         return_value;
-    bool
+    final bool
         undoable;
-    EntityState
+    final EntityState
         state;
+    final List<CommandResult>
+        execute_first;
 
-    CommandResult({this.events: const [], this.return_value: null, this.undoable: false, this.state});
+    CommandResult({this.events: const [], this.return_value: null, this.undoable: false, this.state, this.execute_first: const []});
 }
