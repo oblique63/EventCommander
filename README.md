@@ -1,11 +1,11 @@
 Event Commander
 ===============
 
-An EventBus and Command Pattern / Undo-Redo library for [Dart](https://www.dartlang.org/).
+An EventBus and [Command Pattern](http://en.wikipedia.org/wiki/Command_pattern), Undo-Redo library for [Dart](https://www.dartlang.org/).
 
 ## Event Bus
 The `EventBus` is the backbone for all of the Command/Undo communication behind the scenes,
-but may be used on its own to fire and listen for (a.k.a. 'publish/subscribe') Events.
+but may be used on its own to fire and listen to (a.k.a. 'publish/subscribe') Events.
 
 #### Basic usage
 
@@ -17,8 +17,11 @@ event_bus.on(MyEventType, (MyEventType event) => doSomething());
 event_bus.signal(new MyEventType()); // doSomething() will be called
 ```
 
+##### Conventions
+Throughout this doc, properties/methods of classes will be listed like so: `property_or_method : [modifiers] Type/ReturnType`
+
 #### EventHandler
-* A function that accepts an `Event`, and is meant to be called whenever an event of the appropriate type is fired.
+A function that accepts an `Event`, and is meant to be called whenever an event of the appropriate type is fired.
 
 #### EventListener
 * `listening_to : Type` - Property that lists what type of `Event` the listener is listening to.
@@ -90,18 +93,82 @@ class MultiEvent extends Event implements MyEvent, MyOtherElement {
 ...
 event_bus.on(MyEvent, (MyEvent e) => doA(e.description));
 event_bus.on(MyOtherEvent, (MyOtherEvent e) => doB(e.number));
-
+...
 event_bus.signal(new MultiEvent(1, 'event')); // triggers both doA() and doB()
 ```
 
 
 ## Commands
+A `Command` is just a function that executes a task, and returns a `CommandResult`.
 
+#### Basic Usage
+```dart
+basicCommand() {
+    doSomething();
+    return new CommandResult(events: [new DidSomethingEvent()]);
+}
+...
+Commander commander = new Commander(event_bus);
+...
+// This will call doSomething(), and fire a DidSomethingEvent
+commander.execute(basicCommand());
+// Notice how 'basicCommand' is called before passing it to execute()
+```
+
+#### CommandResult
+All the following properties of a `CommandResult` may be set in the constructor as named parameters (as shown above):
+
+* `return_value : dynamic` -
+The return value of a command. What will be returned in a `Future` when `Commander.execute()` is called.
+
+* `events : List<Event>` -
+A list of events the command should signal. `EventListeners` registered to the `Commander`'s `event_bus`
+will be notified when the command is executed.
+
+* `undoable : bool` -
+Whether the command can be undone. If `true`, it must also assign an `EntityState` to the `state` parameter.
+
+* `state : EntityState` -
+A snapshot of the changes made by the command on some entity/object (described further below).
+Only used when `undoable` is `true`.
+
+
+#### Commander
+The object in charge of notifying the `EventBus` and Undo Stack of actions performed by `Commands`.
+Each `Commander` instance must be instantiated with the `EventBus` it will send `Events` to.
+
+* `execute(CommandResult result) : Future<dynamic>` -
+Despite it's name, this does not actually call your `Command` function (you must call it yourself, as demonstrated
+in the example above), it only propagates the result to the associated `EventBus` and logs any state changes to the
+`UndoRedoService`. It will return whatever your `Command` listed as its `return_value`, wrapped in a `Future`.
+  * _Example:_ `commander.execute(squareCommand(2)).then((result) => result == 4)` will be `true`
+
+* `executeSequence(List<CommandResult> results) : Future< List<dynamic> >` -
+Executes a sequence of `Commands` in the order given. Returns a `Future` with a list of each command's `return_value`
+in the order executed.
+  * _Example:_ `commander.executeSequence([squareCommand(2), squareCommand(3)])` will return `[4, 9]` inside a `Future`
+
+* `event_bus : final EventBus` -
+The `EventBus` all the command events will be sent to. Will have been defined in the constructor.
+
+* `undo_service : UndoRedoService` -
+The object in charge of managing state. A new `UndoRedoService` instance is created for each `Commander`.
+
+
+### Undo/Redo
+Undo functionality can be implemented easily once state management behaviors are encapsulated as `Command` functions.
+The undo service provided is a basic linear, stack-like implementation using the [Memento Pattern](http://en.wikipedia.org/wiki/Memento_pattern).
+Modifications made after an `undo()` call will overwrite any possible `redo()` states.
+
+#### Undoable
 TODO
 
-#### Undo/Redo
-
+#### EntityState
 TODO
+
+#### UndoRedoService
+Each `Commander` instance manages an `UndoRedoService`. If you want to be able to undo states for certain components
+separately, you should create a new `Commander` for each of the components whose state you wish to track.
 
 ## Install
 
