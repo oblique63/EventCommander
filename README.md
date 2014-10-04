@@ -168,7 +168,8 @@ A snapshot of the changes made by the command on some entity/object (described f
 Only used when `undoable` is `true`.
 
 * `execute_first : List<CommandResult>` -
-A sequence of `CommandResults` that should be processed before the current command.
+A sequence of `CommandResults` that should be processed before the current command. Equivalent to calling
+`commander.executeSequence(execute_first)`.
 
 
 #### Commander
