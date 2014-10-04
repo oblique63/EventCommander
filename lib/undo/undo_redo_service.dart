@@ -9,6 +9,15 @@ class UndoRedoService {
     int get
     stack_size => _state_stack.saved_states;
 
+    bool get
+    isEmpty => _state_stack.isEmpty;
+
+    bool get
+    canUndo => !isEmpty;
+
+    bool get
+    canRedo => _state_stack.canMoveForward;
+
     void
     recordState(EntityState state) => _state_stack.add(state);
 

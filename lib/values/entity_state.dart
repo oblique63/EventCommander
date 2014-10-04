@@ -3,19 +3,22 @@ part of event_commander;
 
 abstract class Undoable {
     void
-    restoreFrom(EntityState state);
+    restoreTo(EntityState state);
 }
 
+/// EntityStates should only be used for classes that implement Undoable
 class EntityState<UndoableType extends Undoable> {
     UndoableType
         _original;
     Map
         _state = {};
 
+
     EntityState({UndoableType original, Map<String, dynamic> state}) :
         _original = original,
         _state = state;
 
+    /// Use when saving partial states (i.e. not all the properties of an entity)
     EntityState.change(this._original, this._state);
 
     UndoableType get
@@ -27,14 +30,18 @@ class EntityState<UndoableType extends Undoable> {
     bool
     contains(String key) => _state.containsKey(key);
 
+    dynamic
+    getOrDefaultTo(String key, default_value) => contains(key) ? _state[key] : default_value;
+
     Set get
     properties => _state.keys;
 
     void
     forEach(void f(property, value)) => _state.forEach(f);
 
+    /// Creates a new EntityState only with the differences between this instance and the 'other' instance
     EntityState
-    changedFrom(EntityState other_state) {
+    diff(EntityState other_state) {
         if (other_state.original != _original)
             throw "Evaluating changes from different objects is undefined";
 
@@ -47,5 +54,5 @@ class EntityState<UndoableType extends Undoable> {
         return new EntityState.change(_original, changed_values);
     }
 
-    toString() => "$_state";
+    toString() => "<${_original.runtimeType}>$_state";
 }

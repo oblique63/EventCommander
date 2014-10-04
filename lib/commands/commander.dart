@@ -34,6 +34,9 @@ class Commander {
 
             undo_service.recordState(command_result.state);
         }
+        else if (command_result.state != null) {
+            throw "Non-undoable Command contained an EntityState: ${command_result.state}";
+        }
 
         if (command_result.events.isNotEmpty)
             command_result.events.forEach((event) => event_bus.signal(event));

@@ -93,17 +93,102 @@ main() {
                 expectMessageCountToBe(2);
             });
         });
+    });
 
-        test('can support multiple Commanders', () {
+    group('Commander', () {
+        setUp(() {
+            event_bus.on(CommandEvent, (event) => event_messages.add('command'));
+        });
 
+        test('fires Events from Commands', () {
+            commander.execute(basicCommand())
+            .whenComplete(() {
+                expectMessageCountToBe(1);
+            });
+        });
+
+        test('can assign multiple instances to an EventBus', () {
+            Commander commander2 = new Commander(event_bus);
+
+            commander.execute(basicCommand())
+            .then((_) => commander2.execute(basicCommand()))
+            .whenComplete(() {
+                expectMessageCountToBe(2);
+            });
+        });
+
+        test('commands return correct values', () {
+            commander.execute(squareCommand(2))
+            .then((result) {
+                expect(result, 4);
+            });
         });
     });
 
-    group('Command Service', () {
+    group('UndoRedoService', () {
+        TestEntity test_entity;
+        int original_id = 1;
 
-    });
+        setUp(() {
+            test_entity = new TestEntity(original_id, 'a test');
+        });
 
-    group('Undo-Redo Service', () {
+        test('stores EntityStates from Commands', () {
+            expect(undo_service.isEmpty, isTrue);
 
+            commander.execute(saveEntityState(test_entity))
+            .whenComplete(() {
+                expect(undo_service.stack_size, 1);
+            });
+        });
+
+        test('undoes changes', () {
+            commander.executeSequence([saveEntityState(test_entity), modifyEntityId(test_entity)])
+            .then((_){
+                expect(test_entity.id, isNot(original_id));
+                expect(undo_service.canUndo, isTrue);
+
+                return undo_service.undo();
+            })
+            .whenComplete((){
+                expect(test_entity.id, original_id);
+            });
+        });
+
+        test('redoes changes', () {
+            var modified_id;
+
+            commander.executeSequence([saveEntityState(test_entity), modifyEntityId(test_entity)])
+            .then((_){
+                expect(test_entity.id, isNot(original_id));
+                expect(undo_service.canRedo, isFalse);
+
+                modified_id = test_entity.id;
+                return undo_service.undo();
+            })
+            .then((_){
+                expect(test_entity.id, original_id);
+                expect(undo_service.canRedo, isTrue);
+
+                return undo_service.redo();
+            })
+            .whenComplete((){
+                expect(test_entity.id, isNot(original_id));
+                expect(test_entity.id, modified_id);
+            });
+        });
+
+        test('clears states', () {
+            var commands = [saveEntityState(test_entity), modifyEntityId(test_entity)];
+
+            commander.executeSequence(commands)
+            .whenComplete((){
+                expect(undo_service.stack_size, commands.length);
+
+                undo_service.clear();
+                expect(undo_service.isEmpty, isTrue);
+                expect(undo_service.stack_size, 0);
+            });
+        });
     });
 }

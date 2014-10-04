@@ -9,5 +9,4 @@ part 'values/entity_state.dart';
 part 'undo/state_stack.dart';
 part 'undo/undo_redo_service.dart';
 part 'commands/command_result.dart';
-part 'commands/command_service.dart';
 part 'commands/commander.dart';

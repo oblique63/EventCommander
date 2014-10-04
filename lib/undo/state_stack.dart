@@ -1,13 +1,22 @@
 part of event_commander;
 
 class _StateStack {
-    List<EntityState>
+    final List<EntityState>
         _saved_states = [];
     int
         _state_position = -1;
 
     int get
     saved_states => _saved_states.length;
+
+    bool get
+    isEmpty => _saved_states.isEmpty;
+
+    bool get
+    canMoveForward => _state_position < _saved_states.length-1;
+
+    bool get
+    canMoveBack => !isEmpty;
 
     void
     add(EntityState state) {
@@ -20,7 +29,7 @@ class _StateStack {
 
     void
     moveBack() {
-        if (_state_position-1 < 0)
+        if (!canMoveBack)
             throw "No previous state in Undo stack";
 
         _restoreStateTo(_state_position - 1);
@@ -28,7 +37,7 @@ class _StateStack {
 
     void
     moveForward() {
-        if (_state_position+1 >= _saved_states.length)
+        if (!canMoveForward)
             throw "Already in last state of Undo stack";
 
         _restoreStateTo(_state_position + 1);
@@ -44,9 +53,9 @@ class _StateStack {
         var current_state = _saved_states[_state_position];
         var requested_state = _saved_states[new_state_position];
         Undoable object = current_state._original;
-        EntityState new_state = requested_state.changedFrom(current_state);
+        EntityState new_state = requested_state.diff(current_state);
 
-        object.restoreFrom(new_state);
+        object.restoreTo(new_state);
         _state_position = new_state_position;
     }
 }
