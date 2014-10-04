@@ -104,6 +104,92 @@ doTests() {
         });
     });
 
+    group('EventQueue', () {
+        EventQueue<Event> event_queue;
+        setUp(() {
+            event_queue = new EventQueue(event_bus);
+        });
+
+        test('listens to and queues up Events', () {
+            event_bus.signal(new TestEvent('test'))
+            .whenComplete((){
+                expect(event_queue, hasLength(1));
+            });
+        });
+
+        test('listens for specific Events', () {
+            var test_queue = new EventQueue(event_bus, queue_on: TestEvent);
+            var alternate_queue = new EventQueue<AlternateEvent>(event_bus); // Generic shorthand syntax for 'queue_on' parameter
+
+            event_bus.signal(new TestEvent('test'))
+            .then((_){
+                expect(test_queue, hasLength(1));
+                expect(alternate_queue.isEmpty, isTrue);
+
+                return event_bus.signal(new AlternateEvent(1));
+            })
+            .then((_){
+                expect(test_queue, hasLength(1)); // No change
+                expect(alternate_queue, hasLength(1));
+            });
+        });
+
+        test('multi-events only queue up once', () {
+            event_bus.on(TestEvent, (event) => event_messages.add(event.description));
+            event_bus.on(AlternateEvent, (event) => event_messages.add(event.number));
+
+            event_bus.signal(new MultiEvent(1, 'multi'))
+            .whenComplete((){
+                expect(event_messages, hasLength(2));
+                expect(event_queue, hasLength(1));
+            });
+        });
+
+        test('pops Events', () {
+            event_bus.signal(new TestEvent('test'))
+            .whenComplete((){
+                expect(event_queue, hasLength(1));
+
+                var peek = event_queue.peekNext();
+                expect(event_queue, hasLength(1));
+
+                var event = event_queue.popNext();
+                expect(event, peek);
+                expect(event is TestEvent, isTrue);
+                expect(event_queue, hasLength(0));
+            });
+        });
+
+        test('clears Events', () {
+            event_bus.signal(new TestEvent('event'))
+            .then((_) => event_bus.signal(new AlternateEvent(2)))
+            .whenComplete((){
+                expect(event_queue, hasLength(2));
+
+                event_queue.clear();
+                expect(event_queue.isEmpty, isTrue);
+                expect(event_queue.hasNext, isFalse);
+                expect(event_queue, hasLength(0));
+            });
+        });
+
+        test('stops receiving events', () {
+            event_bus.signal(new TestEvent('test'))
+            .then((_){
+                expect(event_queue, hasLength(1));
+
+                event_queue.clear();
+                event_queue.stopReceivingEvents();
+
+                return event_bus.signal(new TestEvent('test'));
+            })
+            .then((_){
+                expect(event_queue.isEmpty, isTrue);
+                expect(event_queue.isActive, isFalse);
+            });
+        });
+    });
+
     group('Commander', () {
         setUp(() {
             event_bus.on(CommandEvent, (event) => event_messages.add('command'));

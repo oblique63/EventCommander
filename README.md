@@ -3,7 +3,7 @@ Event Commander
 
 [![Build Status](https://drone.io/github.com/oblique63/EventCommander/status.png)](https://drone.io/github.com/oblique63/EventCommander/latest)
 
-An EventBus and [Command Pattern](http://en.wikipedia.org/wiki/Command_pattern), Undo-Redo library for [Dart](https://www.dartlang.org/).
+An EventBus, EventQueue, [Command Pattern](http://en.wikipedia.org/wiki/Command_pattern), and Undo-Redo library for [Dart](https://www.dartlang.org/).
 
 ##### Conventions
 Throughout this doc, properties/methods of classes will be listed in the following format:
@@ -57,9 +57,38 @@ Removes all `EventListeners`/`EventHandlers` from the `EventBus` instance.
 * `hasListener(EventListener listener) : bool` -
 Checks whether the given `listener` is registered with the `EventBus` instance.
 
+## Event Queue
+`EventQueue` is a basic [Event/Message Queue](http://gameprogrammingpatterns.com/event-queue.html) implementation
+that populates itself based on `Events` sent to the `EventBus`. By default, an `EventQueue` will listen to all `Events`,
+but each instance may be configured to only queue up specific event types upon creation:
+
+```dart
+var queue = new EventQueue(event_bus, queue_on: MyEvent);
+
+// Alternative declaration using generics (yields same result as above)
+var queue = new EventQueue<MyEvent>(event_bus);
+// Note: Event types specified using generics will override any values passed to the 'queue_on' parameter
+```
+
+#### Sample usage
+```dart
+while(true) {
+    if (event_queue.hasNext) {
+       Event event = event_queue.popNext();
+       doSomethingWith(event);
+       ...
+       // Alternatively, you do not have to remove the events from the queue to examine them:
+       checkEvent(event_queue.peekNext());
+    }
+    // break out of the loop under some condition...
+}
+
+if (event_queue.isActive)
+    event_queue.stopReceivingEvents();
+```
 
 ## Events
-Custom Events may be created by subclassing the `Event` class, and may contain any assortment
+Custom Events may be created by sub-classing the `Event` class, and may contain any assortment
 of properties and behaviors like you would find in a regular Dart class.
 
 ```dart
@@ -106,7 +135,7 @@ event_bus.signal(new MultiEvent(1, 'event')); // triggers both doA() and doB()
 ## Commands
 A `Command` is just a function that executes a task, and returns a `CommandResult`.
 
-#### Basic Usage
+#### Sample Usage
 ```dart
 basicCommand() {
     doSomething();
@@ -193,11 +222,11 @@ then just run `$ pub get` and you'll be all set to go.
 __EventCommander__ has no additional/external dependencies, and is compatible with both client-side and server-side code.
 
 ### Import
-For _Event Bus_ features only:
+For _Event Bus_ and _Event Queue_ features only:
 
 `import 'package:event_commander/event_bus.dart';`
 
 
-For _Event Bus_ and _Command/Undo_ features:
+For _Event Bus_, _Event Queue_, and _Command/Undo_ features:
 
 `import 'package:event_commander/event_commander.dart';`

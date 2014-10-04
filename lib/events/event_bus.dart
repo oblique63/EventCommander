@@ -12,6 +12,9 @@ class EventBus {
      */
     EventListener
     on(Type event_type, EventHandler handler) {
+        if (event_type == null)
+            throw "EventHandler tried to register for 'null' event type";
+
         _addSubscriber(event_type, handler);
 
         if (!_hasController(event_type))
