@@ -58,10 +58,13 @@ doTests() {
 
             event_bus.signal(event)
             .then((_) {
+                expect(listener.isActive, isTrue);
+                expect(listener.listens_to, TestEvent);
                 expectMessageCountToBe(1);
 
                 listener.stopListening();
                 expect(event_bus.hasListener(listener), isFalse);
+                expect(listener.isActive, isFalse);
 
                 return event_bus.signal(event);
             })

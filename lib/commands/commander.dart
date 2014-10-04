@@ -1,5 +1,8 @@
 part of event_commander;
 
+/**
+ * In charge of notifying the [EventBus] and [UndoRedoService] of actions performed by [Commands].
+ */
 class Commander {
     final EventBus
         event_bus;
@@ -15,8 +18,10 @@ class Commander {
     }
 
 
-    /// Executes the given sequence of Commands in order.
-    /// Future returns a List of the `return_value`s specified by each of the [CommandResult] instances
+    /**
+     * Executes the given sequence of Commands in order.
+     * Future returns a List of the `return_value`s specified by each of the [CommandResult] instances
+     */
     Future<List>
     executeSequence(List<CommandResult> commands) {
         return new Future.sync(() {

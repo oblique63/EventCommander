@@ -3,6 +3,12 @@ Event Commander
 
 An EventBus and [Command Pattern](http://en.wikipedia.org/wiki/Command_pattern), Undo-Redo library for [Dart](https://www.dartlang.org/).
 
+##### Conventions
+Throughout this doc, properties/methods of classes will be listed in the following format:
+
+`property_or_method : [modifiers] Type/ReturnType`
+
+
 ## Event Bus
 The `EventBus` is the backbone for all of the Command/Undo communication behind the scenes,
 but may be used on its own to fire and listen to (a.k.a. 'publish/subscribe') Events.
@@ -17,17 +23,14 @@ event_bus.on(MyEventType, (MyEventType event) => doSomething());
 event_bus.signal(new MyEventType()); // doSomething() will be called
 ```
 
-##### Conventions
-Throughout this doc, properties/methods of classes will be listed like so: `property_or_method : [modifiers] Type/ReturnType`
-
 #### EventHandler
 A function that accepts an `Event`, and is meant to be called whenever an event of the appropriate type is fired.
 
 #### EventListener
-* `listening_to : Type` - Property that lists what type of `Event` the listener is listening to.
+* `listens_to : Type` - Property that lists what type of `Event` the listener is listening to.
 
 * `handler : EventHandler` - The `EventHandler` function that is called whenever an `event` of the type
-specified by `listening_to` is signaled.
+specified by `listens_to` is signaled.
 
 * `stopListening() : void` - Unregisters the listener from its corresponding `EventBus`, and stops the `handler`
 from being called and handling future events.
@@ -157,7 +160,7 @@ The object in charge of managing state. A new `UndoRedoService` instance is crea
 
 ### Undo/Redo
 Undo functionality can be implemented easily once state management behaviors are encapsulated as `Command` functions.
-The undo service provided is a basic linear, stack-like implementation using the [Memento Pattern](http://en.wikipedia.org/wiki/Memento_pattern).
+The undo service provided is a standard linear, stack-like implementation using the [Memento Pattern](http://en.wikipedia.org/wiki/Memento_pattern).
 Modifications made after an `undo()` call will overwrite any possible `redo()` states.
 
 #### Undoable

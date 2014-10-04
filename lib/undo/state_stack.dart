@@ -1,5 +1,8 @@
 part of event_commander;
 
+/**
+ * Linear Undo/Redo stack implementation.
+ */
 class _StateStack {
     final List<EntityState>
         _saved_states = [];

@@ -1,11 +1,23 @@
 part of event_commander;
 
-
+/**
+ * Classes intending to be used with the [UndoRedoService] must implement this
+ * interface, so that its instances may be restored to states on the Undo Stack.
+ */
 abstract class Undoable {
     void restoreTo(EntityState state);
 }
 
-/// EntityStates should only be used for classes that implement Undoable
+/**
+ * An implementation of a [Memento](http://en.wikipedia.org/wiki/Memento_pattern)
+ * for use by the [UndoRedoService].
+ *
+ * Used to store property values of objects. May represent the entire state
+ * of an object, or only a partial state containing a subset of the object's
+ * properties.
+ *
+ * Should only be used for classes that implement Undoable
+ */
 class EntityState<UndoableType extends Undoable> {
     UndoableType
         _original;
@@ -22,6 +34,9 @@ class EntityState<UndoableType extends Undoable> {
     UndoableType get
     original => _original;
 
+    Set get
+    properties => _state.keys;
+
     operator
     [] (String key) => _state[key];
 
@@ -30,9 +45,6 @@ class EntityState<UndoableType extends Undoable> {
 
     dynamic
     getOrDefaultTo(String key, default_value) => contains(key) ? _state[key] : default_value;
-
-    Set get
-    properties => _state.keys;
 
     void
     forEach(void f(property, value)) => _state.forEach(f);
