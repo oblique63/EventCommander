@@ -2,8 +2,7 @@ part of event_commander;
 
 
 abstract class Undoable {
-    void
-    restoreTo(EntityState state);
+    void restoreTo(EntityState state);
 }
 
 /// EntityStates should only be used for classes that implement Undoable
@@ -12,7 +11,6 @@ class EntityState<UndoableType extends Undoable> {
         _original;
     Map
         _state = {};
-
 
     EntityState({UndoableType original, Map<String, dynamic> state}) :
         _original = original,

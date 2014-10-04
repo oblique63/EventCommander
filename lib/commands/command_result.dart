@@ -4,10 +4,14 @@ typedef CommandResult Command();
 
 /// A generic ReturnType can be listed, but it is only for documentation
 class CommandResult<ReturnType> {
-    bool undoable;
-    EntityState state;
-    List<Event> events;
-    ReturnType return_value;
+    List<Event>
+        events;
+    ReturnType
+        return_value;
+    bool
+        undoable;
+    EntityState
+        state;
 
-    CommandResult({this.undoable: false, this.state, this.events: const [], this.return_value: null});
+    CommandResult({this.events: const [], this.return_value: null, this.undoable: false, this.state});
 }

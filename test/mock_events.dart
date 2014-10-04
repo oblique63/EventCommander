@@ -25,5 +25,4 @@ class MultiEvent extends Event implements TestEvent, AlternateEvent {
     }
 }
 
-class CommandEvent extends Event {
-}
+class CommandEvent extends Event {}

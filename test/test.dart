@@ -6,10 +6,14 @@ import 'package:unittest/unittest.dart';
 part 'mock_events.dart';
 part 'mock_commands.dart';
 
-EventBus event_bus;
-Commander commander;
-UndoRedoService undo_service;
-List<String> event_messages;
+EventBus
+    event_bus;
+Commander
+    commander;
+UndoRedoService
+    undo_service;
+List<String>
+    event_messages;
 
 expectMessageCountToBe(int n) => expect(event_messages, hasLength(n));
 
