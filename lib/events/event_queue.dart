@@ -11,10 +11,10 @@ class EventQueue<EventType extends Event> {
      */
     EventQueue(EventBus event_bus, {Type queue_on: Event}) {
         if (EventType != dynamic) {
-            _listener = event_bus.on(EventType, (event) => _queue.addLast(event));
+            _listener = event_bus.on(EventType, _addEvent);
         }
         else {
-            _listener = event_bus.on(queue_on, (event) => _queue.addLast(event));
+            _listener = event_bus.on(queue_on, _addEvent);
         }
     }
 
@@ -61,5 +61,12 @@ class EventQueue<EventType extends Event> {
         var queue_type = "EventQueue<$queues_on>";
         var events = _queue.map((Event e) => e.runtimeType);
         return "$queue_type$events";
+    }
+
+    void
+    _addEvent(Event event) {
+        if (!_queue.contains(event)) {
+            _queue.addLast(event);
+        }
     }
 }

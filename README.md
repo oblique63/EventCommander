@@ -21,12 +21,31 @@ but may be used on its own to fire and listen to (a.k.a. 'publish/subscribe') Ev
 var event_bus = new EventBus();
 
 event_bus.on(MyEventType, (MyEventType event) => doSomething());
-...
+
 event_bus.signal(new MyEventType()); // doSomething() will be called
 ```
 
 #### EventHandler
 A function that accepts an `Event`, and is meant to be called whenever an event of the appropriate type is fired.
+Note: since `Events` allow for inheritance, `EventHandlers` instances should not be reused to listen to multiple 
+events of the same type, since each EventHandler instance will only be called once per Event firing. Example:
+
+```dart
+myEventHandler(MyEvent event) => doSomething();
+
+event_bus..on(MyEvent, myEventHandler)
+         ..on(MyChildEvent, myEventHandler);  // where MyChildEvent is a subtype of MyEvent
+
+event_bus.signal(MyChildEvent); 
+// Will only call myEventHandler() once, despite other handlers for MyEvent also being called.
+
+// To avoid this, simply assign different function instances for each listener:
+event_bus..on(MyEvent, (event) => doSomething())
+         ..on(MyChildEvent, (event) => doSomething());
+
+event_bus.signal(MyChildEvent); 
+// This time doSomething() will be called twice.
+``` 
 
 #### EventListener
 * `listens_to : Type` - Property that lists what type of `Event` the listener is listening to.
@@ -76,7 +95,7 @@ while(true) {
     if (event_queue.hasNext) {
        Event event = event_queue.popNext();
        doSomethingWith(event);
-       ...
+
        // Alternatively, you do not have to remove events
        // from the queue to examine them:
        checkEvent(event_queue.peekNext());
@@ -125,10 +144,10 @@ class MultiEvent extends Event implements MyEvent, MyOtherElement {
     this.parents.addAll([MyEvent, MyOtherEvent]);
   }
 }
-...
+
 event_bus.on(MyEvent, (MyEvent e) => doA(e.description));
 event_bus.on(MyOtherEvent, (MyOtherEvent e) => doB(e.number));
-...
+
 event_bus.signal(new MultiEvent(1, 'event')); // triggers both doA() and doB()
 ```
 
@@ -214,7 +233,7 @@ This ensures that the object can understand and update itself from `EntityStates
 class MyEntity implements Undoable {
     int id;
     String description;
-    ...
+
     restoreTo(EntityState state) {
         id = state.getOrDefaultTo('id', id);
         description = state.getOrDefaultTo('description', description);

@@ -210,6 +210,16 @@ doTests() {
                 expect(event_queue.isActive, isFalse);
             });
         });
+
+        test("doesn't add duplicate events", () {
+            var event = new TestEvent('single event');
+
+            event_bus.signal(event)
+            .then((_) => event_bus.signal(event))
+            .whenComplete(() {
+                expect(event_queue, hasLength(1));
+            });
+        });
     });
 
     group('Commander', () {
