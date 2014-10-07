@@ -55,4 +55,11 @@ class EventQueue<EventType extends Event> {
 
     void
     stopReceivingEvents() => _listener.stopListening();
+
+    String
+    toString() {
+        var queue_type = "EventQueue<$queues_on>";
+        var events = _queue.map((Event e) => e.runtimeType);
+        return "$queue_type$events";
+    }
 }

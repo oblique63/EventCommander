@@ -11,6 +11,12 @@ class ChildEvent extends TestEvent {
     }
 }
 
+class GrandChildEvent extends ChildEvent {
+    GrandChildEvent(String description) : super(description) {
+        this.parents.add(ChildEvent);
+    }
+}
+
 class AlternateEvent extends Event {
     int number;
     AlternateEvent(this.number);

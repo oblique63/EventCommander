@@ -111,6 +111,7 @@ doTests() {
             // Despite being assigned multiple times each
             event_bus..on(TestEvent, eventHandler)
                      ..on(MultiEvent, eventHandler)
+                     ..on(GrandChildEvent, eventHandler)
                      ..on(TestEvent, eventHandler2)
                      ..on(AlternateEvent, eventHandler2);
 
@@ -136,7 +137,9 @@ doTests() {
 
         test('listens for specific Events', () {
             var test_queue = new EventQueue(event_bus, queue_on: TestEvent);
-            var alternate_queue = new EventQueue<AlternateEvent>(event_bus); // Generic shorthand syntax for 'queue_on' parameter
+
+            // Using generic shorthand syntax for 'queue_on' parameter
+            var alternate_queue = new EventQueue<AlternateEvent>(event_bus);
 
             event_bus.signal(new TestEvent('test'))
             .then((_){
@@ -152,9 +155,11 @@ doTests() {
         });
 
         test('multi-events only queue up once', () {
+            // 2 different EventHandlers...
             event_bus.on(TestEvent, (event) => event_messages.add(event.description));
             event_bus.on(AlternateEvent, (event) => event_messages.add(event.number));
 
+            // 1 Event
             event_bus.signal(new MultiEvent(1, 'multi'))
             .whenComplete((){
                 expect(event_messages, hasLength(2));
