@@ -88,7 +88,11 @@ class EventBus {
 
     void
     _dispatchEvent(Event event) {
-        if (event.dispatched) return;
+        if (event.dispatched) {
+            if (!suppress_warnings)
+                print("[EventBus] WARNING: Same instance of ${event.runtimeType} is being signaled multiple times");
+            return;
+        }
 
         var event_types = _eventsToSignal(event);
         var called_handlers = [];
@@ -103,7 +107,7 @@ class EventBus {
                         called_handlers.add(handler);
                     }
                     else if (!suppress_warnings && !logged_warning) {
-                        print("WARNING: Same EventHandler function/instance added for multiple events in $event_types");
+                        print("[EventBus] WARNING: Same EventHandler function registered for multiple events in $event_types");
                         logged_warning = true;
                     }
                 }

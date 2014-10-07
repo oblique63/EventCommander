@@ -5,6 +5,15 @@ Event Commander
 
 An EventBus, EventQueue, [Command Pattern](http://en.wikipedia.org/wiki/Command_pattern), and Undo-Redo library for [Dart](https://www.dartlang.org/).
 
+#### TL;DR
+- The `EventBus` is in charge of firing, and sending `Events` to functions (i.e. `EventHandlers`)  you register.
+- You can make/compose your own `Event` types with multiple-inheritance so that `EventHandlers` can listen to subtypes of events.
+- An `EventQueue` is used whenever you want to queue up events of a certain type, and handle them sequentially.
+- Use `Commands` instead of `EventHandlers` when you want to keep track of the actions your application performs.
+- _Undo/Redo_ abilities are a nice bonus you get from using `Commands`, but require your commands to take a snapshot of
+the changes performed to your objects using a `Map`.
+
+
 ##### Conventions
 Throughout this doc, properties/methods of classes will be listed in the following format:
 
@@ -25,9 +34,14 @@ event_bus.on(MyEventType, (MyEventType event) => doSomething());
 event_bus.signal(new MyEventType()); // doSomething() will be called
 ```
 
+Ideally, only one instance of an `EventBus` object should be needed for each major scope of your application
+(e.g. client vs server). While using multiple instances is possible, it makes keeping track of events trickier,
+as there is no global/static EventBus object listening to everything (this is a design choice to allow for more flexibility).
+So passing references to a single main `EventBus` instance is the preferred means of usage.
+
 #### EventHandler
 A function that accepts an `Event`, and is meant to be called whenever an event of the appropriate type is fired.
-Note: since `Events` allow for inheritance, `EventHandlers` instances should not be reused to listen to multiple 
+Note: since `Events` allow for inheritance, `EventHandlers` instances should not be reused to listen to multiple
 events of the same type, since each EventHandler instance will only be called once per Event firing. Example:
 
 ```dart
@@ -36,16 +50,16 @@ myEventHandler(MyEvent event) => doSomething();
 event_bus..on(MyEvent, myEventHandler)
          ..on(MyChildEvent, myEventHandler);  // where MyChildEvent is a subtype of MyEvent
 
-event_bus.signal(MyChildEvent); 
+event_bus.signal(MyChildEvent);
 // Will only call myEventHandler() once, despite other handlers for MyEvent also being called.
 
 // To avoid this, simply assign different function instances for each listener:
 event_bus..on(MyEvent, (event) => doSomething())
          ..on(MyChildEvent, (event) => doSomething());
 
-event_bus.signal(MyChildEvent); 
+event_bus.signal(MyChildEvent);
 // This time doSomething() will be called twice.
-``` 
+```
 
 #### EventListener
 * `listens_to : Type` - Property that lists what type of `Event` the listener is listening to.
@@ -116,12 +130,20 @@ class MyEvent extends Event {
   String description;
   MyEvent(this.description);
 }
+
+event_bus.on(MyEvent, (event) => doSomething());
+
+event_bus.signal(new MyEvent('Something happened!')):
 ```
 
-Events support a multiple-inheritance scheme whereby listeners for a particular Event Type
-may also be notified of other Events implementing/extending that Event Type interface.
-This is accomplished by adding super-class/parent events to a `Set<Type> parents` property
-in your `Event` class.
+Notice that a new instance of your Event should be created when it's being signaled. This is because
+creating events is cheap, and it catches the accidental firing of the same event multiple times.
+The `EventBus` interprets signaling the same _exact_ `Event` instance multiple times as an error, so
+make sure to create a new instance for each event firing.
+
+Events also support a multiple-inheritance scheme whereby listeners for a particular Event Type
+may be notified of other Events implementing/extending that same Event Type. This is accomplished
+by adding super-class/parent events to a `Set<Type> parents` property in your `Event` class. Example:
 
 ```dart
 class MyEvent extends Event {
@@ -141,6 +163,8 @@ class MultiEvent extends Event implements MyEvent, MyOtherElement {
   String description;
 
   MyChildEvent(this.number, this.description) {
+    // This is what will notify listeners of MyEvent and MyOtherEvent
+    // whenever this event is called:
     this.parents.addAll([MyEvent, MyOtherEvent]);
   }
 }
@@ -242,7 +266,16 @@ class MyEntity implements Undoable {
 ```
 
 #### EntityState
-The 'memento' object used to store states on the Undo Stack.
+The 'memento' object used to store states on the Undo Stack. Requires a `Map` of an object's current state.
+
+##### Sample Usage
+```dart
+changeDescriptionCommand(MyEntity entity) {
+    entity.description = 'new description';
+    EntityState<MyEntity> state = new EntityState.change(entity, {'description': entity.description});
+    return new CommandResult(undoable: true, state: state);
+}
+```
 
 * `EntityState<EntityType>({Undoable entity, Map<String, dynamic> state})` -
 Default constructor, stores the original `entity` object alongside a `Map` of its properties.

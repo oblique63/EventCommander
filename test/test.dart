@@ -55,6 +55,7 @@ doTests() {
         test('listeners stop listening', () {
             var listener = event_bus.on(TestEvent, (event) => event_messages.add(event.description));
             var event = new TestEvent('testing');
+            event_bus.suppress_warnings = true; // because 'event' will be signaled twice
 
             event_bus.signal(event)
             .then((_) {
@@ -104,6 +105,7 @@ doTests() {
         });
 
         test('only calles each EventHandler only once', () {
+            // Because the same eventHandlers will be set to listen to multiple events of the same super-type:
             event_bus.suppress_warnings = true;
 
             // Each of these handlers should contribute only 1 message to the message List...
@@ -215,6 +217,7 @@ doTests() {
 
         test("doesn't add duplicate events", () {
             var event = new TestEvent('single event');
+            event_bus.suppress_warnings = true; // because 'event' will be signaled twice
 
             event_bus.signal(event)
             .then((_) => event_bus.signal(event))
