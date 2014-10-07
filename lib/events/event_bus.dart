@@ -86,16 +86,25 @@ class EventBus {
 
     void
     _dispatchEvent(Event event) {
-        if (!event.dispatched) {
-            var event_types = _eventsToSignal(event);
+        if (event.dispatched) return;
 
-            event_types.forEach((event_type) {
-                if (_event_subscribers.containsKey(event_type))
-                    _event_subscribers[event_type].forEach((EventHandler subscriber) => subscriber(event));
-            });
+        var event_types = _eventsToSignal(event);
 
-            event.dispatched = true;
-        }
+        var called_handlers = [];
+
+        event_types.forEach((event_type) {
+            if (_event_subscribers.containsKey(event_type)) {
+
+                for (EventHandler handler in _event_subscribers[event_type]) {
+                    if (!called_handlers.contains(handler)) {
+                        handler(event);
+                        called_handlers.add(handler);
+                    }
+                }
+            }
+        });
+
+        event.dispatched = true;
     }
 
     List<Type>

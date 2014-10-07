@@ -12,7 +12,7 @@ Commander
     commander;
 UndoRedoService
     undo_service;
-List<String>
+List
     event_messages;
 
 expectMessageCountToBe(int n) => expect(event_messages, hasLength(n));
@@ -96,6 +96,23 @@ doTests() {
         test('can fire Multi-Events', () {
             event_bus.on(TestEvent, (event) => event_messages.add(event.description));
             event_bus.on(AlternateEvent, (event) => event_messages.add(event.number));
+
+            event_bus.signal(new MultiEvent(1, 'event'))
+            .whenComplete(() {
+                expectMessageCountToBe(2);
+            });
+        });
+
+        test('only calles each EventHandler only once', (){
+            // Each of these handlers should contribute only 1 message to the message List...
+            eventHandler(Event event) => event_messages.add(event);
+            eventHandler2(Event event) => event_messages.add(event);
+
+            // Despite being assigned multiple times each
+            event_bus..on(TestEvent, eventHandler)
+                     ..on(MultiEvent, eventHandler)
+                     ..on(TestEvent, eventHandler2)
+                     ..on(AlternateEvent, eventHandler2);
 
             event_bus.signal(new MultiEvent(1, 'event'))
             .whenComplete(() {
