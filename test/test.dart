@@ -103,7 +103,9 @@ doTests() {
             });
         });
 
-        test('only calles each EventHandler only once', (){
+        test('only calles each EventHandler only once', () {
+            event_bus.suppress_warnings = true;
+
             // Each of these handlers should contribute only 1 message to the message List...
             eventHandler(Event event) => event_messages.add(event);
             eventHandler2(Event event) => event_messages.add(event);

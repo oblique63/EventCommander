@@ -5,6 +5,8 @@ class EventBus {
         _event_subscribers = {};
     final Map< Type, StreamController<Event> >
         _controllers = {};
+    bool
+        suppress_warnings = false;
 
     /**
      * Subscribes [EventHandlers] to receive [Events] sent to the EventBus instance.
@@ -89,8 +91,8 @@ class EventBus {
         if (event.dispatched) return;
 
         var event_types = _eventsToSignal(event);
-
         var called_handlers = [];
+        var logged_warning = false;
 
         event_types.forEach((event_type) {
             if (_event_subscribers.containsKey(event_type)) {
@@ -99,6 +101,10 @@ class EventBus {
                     if (!called_handlers.contains(handler)) {
                         handler(event);
                         called_handlers.add(handler);
+                    }
+                    else if (!suppress_warnings && !logged_warning) {
+                        print("WARNING: Same EventHandler function/instance added for multiple events in $event_types");
+                        logged_warning = true;
                     }
                 }
             }
@@ -109,8 +115,8 @@ class EventBus {
 
     List<Type>
     _eventsToSignal(Event event) {
-        return new List.from(event.parents)
-            ..add(event.runtimeType)
-            ..reversed;
+        var events = new List.from(event.parents);
+        events.add(event.runtimeType);
+        return events.reversed.toList();
     }
 }
