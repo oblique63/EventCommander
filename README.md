@@ -270,8 +270,8 @@ The 'memento' object used to store states on the Undo Stack. Requires a `Map` of
 
 ##### Sample Usage
 ```dart
-changeDescriptionCommand(MyEntity entity) {
-    entity.description = 'new description';
+changeDescriptionCommand(MyEntity entity, String new_description) {
+    entity.description = new_description;
     EntityState<MyEntity> state = new EntityState.change(entity, {'description': entity.description});
     return new CommandResult(undoable: true, state: state);
 }
