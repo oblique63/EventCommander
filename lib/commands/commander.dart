@@ -7,9 +7,9 @@ class Commander {
     final EventBus
         event_bus;
     final UndoRedoService
-        undo_service = new UndoRedoService();
+        undo_service;
 
-    Commander(this.event_bus);
+    Commander(this.event_bus) : undo_service = new UndoRedoService();
 
     /// Future returns the `return_value` specified by the [CommandResult] instance
     Future<dynamic>
