@@ -19,7 +19,7 @@ class _StateStack {
     canMoveForward => _state_position < _saved_states.length-1;
 
     bool get
-    canMoveBack => !isEmpty;
+    canMoveBack => saved_states > 1;
 
     void
     add(EntityState state) {
@@ -60,5 +60,24 @@ class _StateStack {
 
         object.restoreTo(new_state);
         _state_position = new_state_position;
+    }
+
+    String
+    toString({int show, bool latest_first: true}) {
+
+        var output = "Position: $_state_position, Stack";
+        var print_states = _saved_states;
+
+        if (latest_first) {
+            output += " (bottom->top)";
+            print_states = _saved_states.reversed;
+        }
+        output += ":\n\t";
+
+        if (show != null && show > 1) {
+            print_states = print_states.getRange(0, show);
+        }
+
+        return output + "${print_states.join('\n\t')}";
     }
 }

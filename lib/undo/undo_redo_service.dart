@@ -37,4 +37,8 @@ class UndoRedoService {
     /// Removes all states stored on the stack
     void
     clear() => _state_stack.clear();
+
+    String
+    toString({int show, bool latest_first: true}) =>
+            "UndoStates >> ${_state_stack.toString(show: show, latest_first: latest_first)}";
 }
