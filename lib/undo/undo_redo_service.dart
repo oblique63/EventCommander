@@ -40,5 +40,5 @@ class UndoRedoService {
 
     String
     toString({int show, bool latest_first: true}) =>
-            "UndoStates >> ${_state_stack.toString(show: show, latest_first: latest_first)}";
+            "UndoRedo >> ${_state_stack.toString(show: show, latest_first: latest_first)}";
 }

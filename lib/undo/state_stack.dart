@@ -69,8 +69,11 @@ class _StateStack {
         var print_states = _saved_states;
 
         if (latest_first) {
-            output += " (bottom->top)";
+            output += " (latest->oldest)";
             print_states = _saved_states.reversed;
+        }
+        else {
+            output += " (oldest->latest)";
         }
         output += ":\n\t";
 
