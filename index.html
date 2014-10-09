@@ -392,7 +392,8 @@ Checks whether the <code>EntityState</code> contains the <code>property</code> s
 <a name="undoredoservice" class="anchor" href="#undoredoservice"><span class="octicon octicon-link"></span></a>UndoRedoService</h4>
 
 <p>Each <code>Commander</code> instance manages an <code>UndoRedoService</code>. If you want to be able to undo states for certain components
-separately, you should create a new <code>Commander</code> for each of the components whose state you wish to track.</p>
+separately, you should create a new <code>Commander</code> for each of the components whose state you wish to track. <code>UndoRedoServices</code>
+can also be instantiated directly for manual <code>EntityState</code> management.</p>
 
 <ul>
 <li><p><code>stack_size : int</code> - How many states are currently saved on the stack</p></li>
@@ -423,7 +424,7 @@ when using a <code>Commander</code></p></li>
 
 <p>then just run <code>$ pub get</code> and you'll be all set to go.</p>
 
-<p><strong>EventCommander</strong> has no additional/external dependencies, and is compatible with both client-side and server-side code.</p>
+<p><strong>EventCommander</strong> has no additional/external dependencies, and is compatible with both <em>client-side</em> and <em>server-side</em> code.</p>
 
 <h3>
 <a name="import" class="anchor" href="#import"><span class="octicon octicon-link"></span></a>Import</h3>
