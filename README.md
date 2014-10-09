@@ -1,6 +1,7 @@
 Event Commander
 ===============
 
+[![Pub Package](http://img.shields.io/pub/v/box2d.svg?style=flat-square)](https://pub.dartlang.org/packages/event_commander)
 [![Build Status](https://drone.io/github.com/oblique63/EventCommander/status.png)](https://drone.io/github.com/oblique63/EventCommander/latest)
 
 An EventBus, EventQueue, [Command Pattern](http://en.wikipedia.org/wiki/Command_pattern), and Undo-Redo library for [Dart](https://www.dartlang.org/).
