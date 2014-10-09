@@ -14,7 +14,7 @@ An EventBus, EventQueue, [Command Pattern](http://en.wikipedia.org/wiki/Command_
 the changes performed to your objects using a `Map`.
 
 
-##### Conventions
+#### Conventions
 Throughout this doc, properties/methods of classes will be listed in the following format:
 
 `property_or_method : [modifiers] Type/ReturnType`
@@ -41,8 +41,8 @@ So passing references to a single main `EventBus` instance is the preferred mean
 
 #### EventHandler
 A function that accepts an `Event`, and is meant to be called whenever an event of the appropriate type is fired.
-Note: since `Events` allow for inheritance, `EventHandlers` instances should not be reused to listen to multiple
-events of the same type, since each EventHandler instance will only be called once per Event firing. Example:
+Note: since `Events` allow for inheritance, `EventHandler` instances should not be reused to listen to multiple
+events of the same super-type, since each EventHandler instance will only be called once per Event firing. Example:
 
 ```dart
 myEventHandler(MyEvent event) => doSomething();
@@ -53,7 +53,7 @@ event_bus..on(MyEvent, myEventHandler)
 event_bus.signal(MyChildEvent);
 // Will only call myEventHandler() once, despite other handlers for MyEvent also being called.
 
-// To avoid this, simply assign different function instances for each listener:
+// To avoid this, simply assign a different function instance to each listener:
 event_bus..on(MyEvent, (event) => doSomething())
          ..on(MyChildEvent, (event) => doSomething());
 
@@ -101,7 +101,7 @@ Alternative declaration using generics (yields same result as above):
 
 `var queue = new EventQueue<MyEvent>(event_bus);`
 
-_(Note: Event types specified using generics will override any values passed to the 'queue_on' parameter)_
+> __Note:__ Event types specified using generics will override any values passed to the 'queue_on' parameter
 
 #### Sample usage
 ```dart
@@ -136,10 +136,18 @@ event_bus.on(MyEvent, (event) => doSomething());
 event_bus.signal(new MyEvent('Something happened!')):
 ```
 
-Notice that a new instance of your Event should be created when it's being signaled. This is because
-creating events is cheap, and it catches the accidental firing of the same event multiple times.
-The `EventBus` interprets signaling the same _exact_ `Event` instance multiple times as an error, so
-make sure to create a new instance for each event firing.
+Notice that new instances of your Events should be created every time they're being signaled. This is because
+modifying/reusing the same _exact_ instance of an `Event` object will break the expected functionality of `EventQueues`
+(i.e. queueing up the same instance twice and modifying its state, effectively overwrites the event's history, since `EventQueue`
+does not keep track of `Event` states and only contains references to the original event objects signaled).
+Additionally, creating events is cheap, and guarding against signaling duplicate event instances helps catch bugs due to
+accidental event firings. The `EventBus` will display a warning whenever it catches an `Event` instance getting
+signaled multiple times.
+
+> __Note:__ The `Event` super-class currently comes with a `dispatched : bool` property that signifies when the event
+> instance has been sent out to its respective listeners. It can be manually set after each use to overcome the
+> 'new-instance-per-signal()' policy, but doing so will break `EventQueues` as explained above. This feature is liable
+> to be deprecated in future versions, so avoid usage of it at all costs.
 
 Events also support a multiple-inheritance scheme whereby listeners for a particular Event Type
 may be notified of other Events implementing/extending that same Event Type. This is accomplished
@@ -174,7 +182,6 @@ event_bus.on(MyOtherEvent, (MyOtherEvent e) => doB(e.number));
 
 event_bus.signal(new MultiEvent(1, 'event')); // triggers both doA() and doB()
 ```
-
 
 ## Commands
 A `Command` is just a function that executes a task, and returns a `CommandResult`.
@@ -225,13 +232,13 @@ Despite it's name, this does not actually call your `Command` function (you must
 in the example above), it only propagates the result to the associated `EventBus` and logs any state changes to the
 `UndoRedoService`. It will return whatever your `Command` listed as its `return_value`, wrapped in a `Future`.
 
-_Example:_ `commander.execute(squareCommand(2)).then((result) => result == 4)` will be `true`
+> __Example:__ `commander.execute(squareCommand(2)).then((result) => result == 4)` will be `true`
 
 * `executeSequence(List<CommandResult> results) : Future< List<dynamic> >` -
 Executes a sequence of `Commands` in the order given. Returns a `Future` with a list of each command's `return_value`
 in the order executed.
 
-_Example:_ `commander.executeSequence([squareCommand(2), squareCommand(3)])` will return `[4, 9]` inside a `Future`
+> __Example:__ `commander.executeSequence([squareCommand(2), squareCommand(3)])` will return `[4, 9]` inside a `Future`
 
 * `event_bus : final EventBus` -
 The `EventBus` all the command events will be sent to. Will have been defined in the constructor.
@@ -285,17 +292,14 @@ Identical to default constructor, used to explicitly denote state _changes_ of a
 (i.e. only properties that have been changed should be included in the `state` map).
 
 * `diff(EntityState other) : EntityState` -
-Returns an `EntityState` with the values in `other` that are different from the current instance.
+Returns an `EntityState` with the values in `other` that are different from the current instance. _Example:_
+    ```dart
+    var stateA = new EntityState(entity: my_entity, state: {'name': 'hello', 'id': 1});
+    var stateB = new EntityState(entity: my_entity, state: {'name': 'world', 'id': 1});
 
-_Example:_
-
-```dart
-var stateA = new EntityState(entity: my_entity, state: {'name': 'hello', 'id': 1});
-var stateB = new EntityState(entity: my_entity, state: {'name': 'world', 'id': 1});
-
-stateA.diff(stateB); // returns EntityState({'name': 'world'})
-stateB.diff(stateA); // returns EntityState({'name': 'hello'})
-```
+    stateA.diff(stateB); // returns EntityState({'name': 'world'})
+    stateB.diff(stateA); // returns EntityState({'name': 'hello'})
+    ```
 
 * `getOrDefaultTo(String property, dynamic default_value) : dynamic` -
 Checks whether the `EntityState` contains the `property` specified, otherwise returns the given `default_value`.
@@ -325,9 +329,9 @@ when using a `Commander`
 
 * `clear() : void` - Removes all the states currently stored on the stack
 
-* `undo() : void`
+* `undo() : void` - Undoes the last command sent to the `Commander`
 
-* `redo() : void`
+* `redo() : void` - Reapplies the last command that was undone
 
 
 ## Install

@@ -8,6 +8,8 @@ class Commander {
         event_bus;
     final UndoRedoService
         undo_service;
+    bool
+        suppress_warnings = false;
 
     Commander(this.event_bus) : undo_service = new UndoRedoService();
 
@@ -54,8 +56,8 @@ class Commander {
 
                 undo_service.recordState(command_result.state);
             }
-            else if (command_result.state != null) {
-                throw "Non-undoable Command contained an EntityState: ${command_result.state}";
+            else if (command_result.state != null && !suppress_warnings) {
+                print("[Commander] WARNING: Non-undoable Command contains an EntityState: ${command_result.state}");
             }
         });
     }

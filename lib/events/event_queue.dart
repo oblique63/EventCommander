@@ -2,7 +2,7 @@ part of event_commander.event_bus;
 
 class EventQueue<EventType extends Event> {
     Queue<EventType>
-        _queue = new Queue();
+        _queue;
     EventListener
         _listener;
 
@@ -10,6 +10,8 @@ class EventQueue<EventType extends Event> {
      * Note: Event types specified using generics will override any values passed to the 'queue_on' parameter
      */
     EventQueue(EventBus event_bus, {Type queue_on: Event}) {
+        _queue = new Queue();
+
         if (EventType != dynamic) {
             _listener = event_bus.on(EventType, _addEvent);
         }
