@@ -293,13 +293,13 @@ Identical to default constructor, used to explicitly denote state _changes_ of a
 
 * `diff(EntityState other) : EntityState` -
 Returns an `EntityState` with the values in `other` that are different from the current instance. _Example:_
-    ```dart
-    var stateA = new EntityState(entity: my_entity, state: {'name': 'hello', 'id': 1});
-    var stateB = new EntityState(entity: my_entity, state: {'name': 'world', 'id': 1});
+```dart
+var stateA = new EntityState(entity: my_entity, state: {'name': 'hello', 'id': 1});
+var stateB = new EntityState(entity: my_entity, state: {'name': 'world', 'id': 1});
 
-    stateA.diff(stateB); // returns EntityState({'name': 'world'})
-    stateB.diff(stateA); // returns EntityState({'name': 'hello'})
-    ```
+stateA.diff(stateB); // returns EntityState({'name': 'world'})
+stateB.diff(stateA); // returns EntityState({'name': 'hello'})
+```
 
 * `getOrDefaultTo(String property, dynamic default_value) : dynamic` -
 Checks whether the `EntityState` contains the `property` specified, otherwise returns the given `default_value`.
