@@ -1,10 +1,12 @@
 library event_commander.test;
 
+import 'dart:async';
 import 'package:event_commander/event_commander.dart';
 import 'package:unittest/unittest.dart';
 
 part 'mock_events.dart';
 part 'mock_commands.dart';
+part 'test_helpers.dart';
 
 EventBus
     event_bus;
@@ -16,7 +18,6 @@ List
     event_messages;
 
 expectMessageCountToBe(int n) => expect(event_messages, hasLength(n));
-
 
 main() => doTests();
 
@@ -45,8 +46,7 @@ doTests() {
 
             event_bus.on(TestEvent, handler);
 
-            event_bus.signal(new TestEvent('testing'))
-            .whenComplete(() {
+            after(event_bus.signal(new TestEvent('testing')), (_) {
                 expectMessageCountToBe(1);
                 expect(event_messages.first, "TestEvent: 'testing'");
             });
@@ -57,8 +57,7 @@ doTests() {
             var event = new TestEvent('testing');
             event_bus.suppress_warnings = true; // because 'event' will be signaled twice
 
-            event_bus.signal(event)
-            .then((_) {
+            after(event_bus.signal(event), (_) {
                 expect(listener.isActive, isTrue);
                 expect(listener.listens_to, TestEvent);
                 expectMessageCountToBe(1);
@@ -67,10 +66,9 @@ doTests() {
                 expect(event_bus.hasListener(listener), isFalse);
                 expect(listener.isActive, isFalse);
 
-                return event_bus.signal(event);
-            })
-            .then((_) {
-                expectMessageCountToBe(1); // Expect no change
+                after(event_bus.signal(event), (_) {
+                    expectMessageCountToBe(1); // Expect no change
+                });
             });
         });
 
@@ -86,9 +84,7 @@ doTests() {
             event_bus.on(TestEvent, (event) => event1_messages.add(event.description));
             event_bus.on(ChildEvent, (event) => event2_messages.add(event.description));
 
-            event_bus.signal(event1)
-            .then((_) => event_bus.signal(event2))
-            .then((_) {
+            after([event_bus.signal(event1), event_bus.signal(event2)], (_) {
                 expect(event1_messages, hasLength(2));
                 expect(event2_messages, hasLength(1));
             });
@@ -98,8 +94,7 @@ doTests() {
             event_bus.on(TestEvent, (event) => event_messages.add(event.description));
             event_bus.on(AlternateEvent, (event) => event_messages.add(event.number));
 
-            event_bus.signal(new MultiEvent(1, 'event'))
-            .whenComplete(() {
+            after(event_bus.signal(new MultiEvent(1, 'event')), (_) {
                 expectMessageCountToBe(2);
             });
         });
@@ -119,8 +114,7 @@ doTests() {
                      ..on(TestEvent, eventHandler2)
                      ..on(AlternateEvent, eventHandler2);
 
-            event_bus.signal(new MultiEvent(1, 'event'))
-            .whenComplete(() {
+            after(event_bus.signal(new MultiEvent(1, 'event')), (_) {
                 expectMessageCountToBe(2);
             });
         });
@@ -133,8 +127,7 @@ doTests() {
         });
 
         test('listens to and queues up Events', () {
-            event_bus.signal(new TestEvent('test'))
-            .whenComplete((){
+            after(event_bus.signal(new TestEvent('test')), (_) {
                 expect(event_queue, hasLength(1));
             });
         });
@@ -145,16 +138,14 @@ doTests() {
             // Using generic shorthand syntax for 'queue_on' parameter
             var alternate_queue = new EventQueue<AlternateEvent>(event_bus);
 
-            event_bus.signal(new TestEvent('test'))
-            .then((_){
+            after(event_bus.signal(new TestEvent('test')), (_) {
                 expect(test_queue, hasLength(1));
                 expect(alternate_queue.isEmpty, isTrue);
 
-                return event_bus.signal(new AlternateEvent(1));
-            })
-            .then((_){
-                expect(test_queue, hasLength(1)); // No change
-                expect(alternate_queue, hasLength(1));
+                after(event_bus.signal(new AlternateEvent(1)),(_) {
+                    expect(test_queue, hasLength(1)); // No change
+                    expect(alternate_queue, hasLength(1));
+                });
             });
         });
 
@@ -164,16 +155,14 @@ doTests() {
             event_bus.on(AlternateEvent, (event) => event_messages.add(event.number));
 
             // 1 Event
-            event_bus.signal(new MultiEvent(1, 'multi'))
-            .whenComplete((){
+            after(event_bus.signal(new MultiEvent(1, 'multi')), (_) {
                 expect(event_messages, hasLength(2));
                 expect(event_queue, hasLength(1));
             });
         });
 
         test('pops Events', () {
-            event_bus.signal(new TestEvent('test'))
-            .whenComplete((){
+            after(event_bus.signal(new TestEvent('test')), (_){
                 expect(event_queue, hasLength(1));
 
                 var peek = event_queue.peekNext();
@@ -187,9 +176,9 @@ doTests() {
         });
 
         test('clears Events', () {
-            event_bus.signal(new TestEvent('event'))
-            .then((_) => event_bus.signal(new AlternateEvent(2)))
-            .whenComplete((){
+            after([event_bus.signal(new TestEvent('event')),
+                   event_bus.signal(new AlternateEvent(2))], (_) {
+
                 expect(event_queue, hasLength(2));
 
                 event_queue.clear();
@@ -200,18 +189,16 @@ doTests() {
         });
 
         test('stops receiving events', () {
-            event_bus.signal(new TestEvent('test'))
-            .then((_){
+            after(event_bus.signal(new TestEvent('test')), (_) {
                 expect(event_queue, hasLength(1));
 
                 event_queue.clear();
                 event_queue.stopReceivingEvents();
 
-                return event_bus.signal(new TestEvent('test'));
-            })
-            .then((_){
-                expect(event_queue.isEmpty, isTrue);
-                expect(event_queue.isActive, isFalse);
+                after(event_bus.signal(new TestEvent('test')), (_) {
+                    expect(event_queue.isEmpty, isTrue);
+                    expect(event_queue.isActive, isFalse);
+                });
             });
         });
 
@@ -219,9 +206,7 @@ doTests() {
             var event = new TestEvent('single event');
             event_bus.suppress_warnings = true; // because 'event' will be signaled twice
 
-            event_bus.signal(event)
-            .then((_) => event_bus.signal(event))
-            .whenComplete(() {
+            after([event_bus.signal(event), event_bus.signal(event)], (_) {
                 expect(event_queue, hasLength(1));
             });
         });
@@ -236,31 +221,29 @@ doTests() {
         });
 
         test('fires Events from Commands', () {
-            commander.execute(basicCommand())
-            .whenComplete(() {
+            after(commander.execute(basicCommand()), (_) {
                 expectEventCountToBe(1);
             });
         });
 
         test('can assign multiple instances to an EventBus', () {
             Commander commander2 = new Commander(event_bus);
-            commander.execute(basicCommand())
-            .then((_) => commander2.execute(basicCommand()))
-            .whenComplete(() {
+
+            after([commander.execute(basicCommand()),
+                   commander2.execute(basicCommand())], (_) {
+
                 expectEventCountToBe(2);
             });
         });
 
         test('commands return correct values', () {
-            commander.execute(squareCommand(2))
-            .then((result) {
+            after(commander.execute(squareCommand(2)), (result) {
                 expect(result, 4);
             });
         });
 
         test('executes sequences', () {
-            commander.executeSequence([squareCommand(2), squareCommand(3)])
-            .then((List results) {
+            after(commander.executeSequence([squareCommand(2), squareCommand(3)]), (List results) {
                 expect(results[0], 4);
                 expect(results[1], 9);
                 expectEventCountToBe(2);
@@ -272,18 +255,16 @@ doTests() {
             var test_entity = new TestEntity(original_id, 'test');
 
             // executes 2 commands via 'execute_first' property in CommandResult
-            commander.execute(saveAndModifyId(test_entity))
-            .then((_) {
+            after(commander.execute(saveAndModifyId(test_entity)), (_) {
                 expectEventCountToBe(2);
                 events.clear();
                 test_entity = new TestEntity(1, 'test');
 
                 // executes 2 prerequisite commands, and fires an event for itself
-                return commander.execute(saveAndModifyIdTwice(test_entity));
-            })
-            .whenComplete(() {
-                expectEventCountToBe(3);
-                expect(test_entity.id, (original_id + 1) * 3);
+                after(commander.execute(saveAndModifyIdTwice(test_entity)), (_) {
+                    expectEventCountToBe(3);
+                    expect(test_entity.id, (original_id + 1) * 3);
+                });
             });
         });
     });
@@ -300,21 +281,18 @@ doTests() {
         test('stores EntityStates from Commands', () {
             expect(undo_service.isEmpty, isTrue);
 
-            commander.execute(saveEntityState(test_entity))
-            .whenComplete(() {
+            after(commander.execute(saveEntityState(test_entity)), (_) {
                 expect(undo_service.stack_size, 1);
             });
         });
 
         test('undoes changes', () {
-            commander.executeSequence([saveEntityState(test_entity), modifyEntityId(test_entity)])
-            .then((_){
+            after(commander.executeSequence([saveEntityState(test_entity), modifyEntityId(test_entity)]), (_) {
                 expect(test_entity.id, isNot(original_id));
                 expect(undo_service.canUndo, isTrue);
 
-                return undo_service.undo();
-            })
-            .whenComplete((){
+                undo_service.undo();
+
                 expect(test_entity.id, original_id);
             });
         });
@@ -322,21 +300,18 @@ doTests() {
         test('redoes changes', () {
             var modified_id;
 
-            commander.executeSequence([saveEntityState(test_entity), modifyEntityId(test_entity)])
-            .then((_){
+            after(commander.executeSequence([saveEntityState(test_entity), modifyEntityId(test_entity)]), (_) {
                 expect(test_entity.id, isNot(original_id));
                 expect(undo_service.canRedo, isFalse);
 
                 modified_id = test_entity.id;
-                return undo_service.undo();
-            })
-            .then((_){
+                undo_service.undo();
+
                 expect(test_entity.id, original_id);
                 expect(undo_service.canRedo, isTrue);
 
-                return undo_service.redo();
-            })
-            .whenComplete((){
+                undo_service.redo();
+
                 expect(test_entity.id, isNot(original_id));
                 expect(test_entity.id, modified_id);
             });
@@ -345,8 +320,7 @@ doTests() {
         test('clears states', () {
             var commands = [saveEntityState(test_entity), modifyEntityId(test_entity)];
 
-            commander.executeSequence(commands)
-            .whenComplete((){
+            after(commander.executeSequence(commands), (_) {
                 expect(undo_service.stack_size, commands.length);
 
                 undo_service.clear();

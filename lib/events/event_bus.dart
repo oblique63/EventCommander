@@ -81,7 +81,7 @@ class EventBus {
 
     void
     _addControllerFor(Type event_type) {
-        // Creating this many controllers may or may not be a source of performance issues later...
+        // Creating this many Streams may or may not be a source of performance issues later...
         _controllers[event_type] = new StreamController<Event>();
         _controllers[event_type].stream.listen(_dispatchEvent);
     }
