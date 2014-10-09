@@ -34,6 +34,11 @@
 
 <p>An EventBus, EventQueue, <a href="http://en.wikipedia.org/wiki/Command_pattern">Command Pattern</a>, and Undo-Redo library for <a href="https://www.dartlang.org/">Dart</a>.</p>
 
+<ul>
+<li><a href="http://www.dartdocs.org/documentation/event_commander/latest">API Documentation</a></li>
+<li><a href="https://github.com/oblique63/EventCommander/blob/master/CHANGELOG.md">Changelog</a></li>
+</ul>
+
 <h4>
 <a name="tldr" class="anchor" href="#tldr"><span class="octicon octicon-link"></span></a>TL;DR</h4>
 
@@ -45,7 +50,9 @@
 <li>
 <em>Undo/Redo</em> abilities are a nice bonus you get from using <code>Commands</code>, but require your commands to take a snapshot of
 the changes performed to your objects using a <code>Map</code>.</li>
-</ul><h4>
+</ul>
+
+<h4>
 <a name="conventions" class="anchor" href="#conventions"><span class="octicon octicon-link"></span></a>Conventions</h4>
 
 <p>Throughout this doc, properties/methods of classes will be listed in the following format:</p>
@@ -107,7 +114,9 @@ events of the same super-type, since each EventHandler instance will only be cal
 specified by <code>listens_to</code> is signaled.</p></li>
 <li><p><code>stopListening() : void</code> - Unregisters the listener from its corresponding <code>EventBus</code>, and stops the <code>handler</code>
 from being called and handling future events.</p></li>
-</ul><h4>
+</ul>
+
+<h4>
 <a name="eventbus" class="anchor" href="#eventbus"><span class="octicon octicon-link"></span></a>EventBus</h4>
 
 <ul>
@@ -125,7 +134,9 @@ from the <code>EventBus</code>. Stops the <code>EventHandler</code> from being c
 Removes all <code>EventListeners</code>/<code>EventHandlers</code> from the <code>EventBus</code> instance.</p></li>
 <li><p><code>hasListener(EventListener listener) : bool</code> -
 Checks whether the given <code>listener</code> is registered with the <code>EventBus</code> instance.</p></li>
-</ul><h2>
+</ul>
+
+<h2>
 <a name="event-queue" class="anchor" href="#event-queue"><span class="octicon octicon-link"></span></a>Event Queue</h2>
 
 <p><code>EventQueue</code> is a basic <a href="http://gameprogrammingpatterns.com/event-queue.html">Event/Message Queue</a> implementation
@@ -265,7 +276,9 @@ Only used when <code>undoable</code> is <code>true</code>.</p></li>
 <li><p><code>execute_first : List&lt;CommandResult&gt;</code> -
 A sequence of <code>CommandResults</code> that should be processed before the current command. Equivalent to calling
 <code>commander.executeSequence(execute_first)</code>.</p></li>
-</ul><h4>
+</ul>
+
+<h4>
 <a name="commander" class="anchor" href="#commander"><span class="octicon octicon-link"></span></a>Commander</h4>
 
 <p>The object in charge of notifying the <code>EventBus</code> and Undo Stack of actions performed by <code>Commands</code>.
@@ -277,7 +290,9 @@ Each <code>Commander</code> instance must be instantiated with the <code>EventBu
 Despite it's name, this does not actually call your <code>Command</code> function (you must call it yourself, as demonstrated
 in the example above), it only propagates the result to the associated <code>EventBus</code> and logs any state changes to the
 <code>UndoRedoService</code>. It will return whatever your <code>Command</code> listed as its <code>return_value</code>, wrapped in a <code>Future</code>.</li>
-</ul><blockquote>
+</ul>
+
+<blockquote>
 <p><strong>Example:</strong> <code>commander.execute(squareCommand(2)).then((result) =&gt; result == 4)</code> will be <code>true</code></p>
 </blockquote>
 
@@ -286,7 +301,9 @@ in the example above), it only propagates the result to the associated <code>Eve
 <code>executeSequence(List&lt;CommandResult&gt; results) : Future&lt; List&lt;dynamic&gt; &gt;</code> -
 Executes a sequence of <code>Commands</code> in the order given. Returns a <code>Future</code> with a list of each command's <code>return_value</code>
 in the order executed.</li>
-</ul><blockquote>
+</ul>
+
+<blockquote>
 <p><strong>Example:</strong> <code>commander.executeSequence([squareCommand(2), squareCommand(3)])</code> will return <code>[4, 9]</code> inside a <code>Future</code></p>
 </blockquote>
 
@@ -295,7 +312,9 @@ in the order executed.</li>
 The <code>EventBus</code> all the command events will be sent to. Will have been defined in the constructor.</p></li>
 <li><p><code>undo_service : UndoRedoService</code> -
 The object in charge of managing state. A new <code>UndoRedoService</code> instance is created for each <code>Commander</code>.</p></li>
-</ul><h3>
+</ul>
+
+<h3>
 <a name="undoredo" class="anchor" href="#undoredo"><span class="octicon octicon-link"></span></a>Undo/Redo</h3>
 
 <p>Undo functionality can be implemented easily once state management behaviors are encapsulated as <code>Command</code> functions.
@@ -350,7 +369,9 @@ Identical to default constructor, used to explicitly denote state <em>changes</e
 (i.e. only properties that have been changed should be included in the <code>state</code> map).</p></li>
 <li><p><code>diff(EntityState other) : EntityState</code> -
 Returns an <code>EntityState</code> with the values in <code>other</code> that are different from the current instance. <em>Example:</em></p></li>
-</ul><div class="highlight highlight-dart"><pre><span class="kd">var</span> <span class="n">stateA</span> <span class="o">=</span> <span class="k">new</span> <span class="n">EntityState</span><span class="p">(</span><span class="nl">entity:</span> <span class="n">my_entity</span><span class="p">,</span> <span class="nl">state:</span> <span class="p">{</span><span class="s1">'name'</span><span class="o">:</span> <span class="s1">'hello'</span><span class="p">,</span> <span class="s1">'id'</span><span class="o">:</span> <span class="m">1</span><span class="p">});</span>
+</ul>
+
+<div class="highlight highlight-dart"><pre><span class="kd">var</span> <span class="n">stateA</span> <span class="o">=</span> <span class="k">new</span> <span class="n">EntityState</span><span class="p">(</span><span class="nl">entity:</span> <span class="n">my_entity</span><span class="p">,</span> <span class="nl">state:</span> <span class="p">{</span><span class="s1">'name'</span><span class="o">:</span> <span class="s1">'hello'</span><span class="p">,</span> <span class="s1">'id'</span><span class="o">:</span> <span class="m">1</span><span class="p">});</span>
 <span class="kd">var</span> <span class="n">stateB</span> <span class="o">=</span> <span class="k">new</span> <span class="n">EntityState</span><span class="p">(</span><span class="nl">entity:</span> <span class="n">my_entity</span><span class="p">,</span> <span class="nl">state:</span> <span class="p">{</span><span class="s1">'name'</span><span class="o">:</span> <span class="s1">'world'</span><span class="p">,</span> <span class="s1">'id'</span><span class="o">:</span> <span class="m">1</span><span class="p">});</span>
 
 <span class="n">stateA</span><span class="p">.</span><span class="n">diff</span><span class="p">(</span><span class="n">stateB</span><span class="p">);</span> <span class="c1">// returns EntityState({'name': 'world'})</span>
@@ -365,7 +386,9 @@ Checks whether the <code>EntityState</code> contains the <code>property</code> s
 <li><p><code>forEach(void f(property, value))</code> - Iterates over each property-value pair in the <code>EntityState</code></p></li>
 <li><p><code>properties : Set&lt;String&gt;</code> - The set of of the properties in the state</p></li>
 <li><p><code>entity : Undoable</code> - The object the EntityState represents.</p></li>
-</ul><h4>
+</ul>
+
+<h4>
 <a name="undoredoservice" class="anchor" href="#undoredoservice"><span class="octicon octicon-link"></span></a>UndoRedoService</h4>
 
 <p>Each <code>Commander</code> instance manages an <code>UndoRedoService</code>. If you want to be able to undo states for certain components
@@ -380,7 +403,9 @@ when using a <code>Commander</code></p></li>
 <li><p><code>clear() : void</code> - Removes all the states currently stored on the stack</p></li>
 <li><p><code>undo() : void</code> - Undoes the last command sent to the <code>Commander</code></p></li>
 <li><p><code>redo() : void</code> - Reapplies the last command that was undone</p></li>
-</ul><h2>
+</ul>
+
+<h2>
 <a name="install" class="anchor" href="#install"><span class="octicon octicon-link"></span></a>Install</h2>
 
 <p>Add <code>event_commander</code> to your <code>pubspec.yaml</code> file to install it from pub:</p>
