@@ -5,6 +5,9 @@ Event Commander
 
 An EventBus, EventQueue, [Command Pattern](http://en.wikipedia.org/wiki/Command_pattern), and Undo-Redo library for [Dart](https://www.dartlang.org/).
 
+- [API Documentation](http://www.dartdocs.org/documentation/event_commander/latest)
+- [Changelog](https://github.com/oblique63/EventCommander/blob/master/CHANGELOG.md)
+
 #### TL;DR
 - The `EventBus` is in charge of firing, and sending `Events` to functions (i.e. `EventHandlers`)  you register.
 - You can make/compose your own `Event` types with multiple-inheritance so that `EventHandlers` can listen to subtypes of events.
