@@ -1,0 +1,418 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Eventcommander by oblique63</title>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <script src="javascripts/scale.fix.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1>Eventcommander</h1>
+        <p>An EventBus, EventQueue, Command Pattern, and Undo-Redo library for Dart</p>
+        <p class="view"><a href="https://github.com/oblique63/EventCommander">View the Project on GitHub <small>oblique63/EventCommander</small></a></p>
+        <ul>
+          <li><a href="https://github.com/oblique63/EventCommander/zipball/master">Download <strong>ZIP File</strong></a></li>
+          <li><a href="https://github.com/oblique63/EventCommander/tarball/master">Download <strong>TAR Ball</strong></a></li>
+          <li><a href="https://github.com/oblique63/EventCommander">View On <strong>GitHub</strong></a></li>
+        </ul>
+      </header>
+      <section>
+        <h1>
+<a name="event-commander" class="anchor" href="#event-commander"><span class="octicon octicon-link"></span></a>Event Commander</h1>
+
+<p><a href="https://drone.io/github.com/oblique63/EventCommander/latest"><img src="https://drone.io/github.com/oblique63/EventCommander/status.png" alt="Build Status"></a></p>
+
+<p>An EventBus, EventQueue, <a href="http://en.wikipedia.org/wiki/Command_pattern">Command Pattern</a>, and Undo-Redo library for <a href="https://www.dartlang.org/">Dart</a>.</p>
+
+<h4>
+<a name="tldr" class="anchor" href="#tldr"><span class="octicon octicon-link"></span></a>TL;DR</h4>
+
+<ul>
+<li>The <code>EventBus</code> is in charge of firing, and sending <code>Events</code> to functions (i.e. <code>EventHandlers</code>)  you register.</li>
+<li>You can make/compose your own <code>Event</code> types with multiple-inheritance so that <code>EventHandlers</code> can listen to subtypes of events.</li>
+<li>An <code>EventQueue</code> is used whenever you want to queue up events of a certain type, and handle them sequentially.</li>
+<li>Use <code>Commands</code> instead of <code>EventHandlers</code> when you want to keep track of the actions your application performs.</li>
+<li>
+<em>Undo/Redo</em> abilities are a nice bonus you get from using <code>Commands</code>, but require your commands to take a snapshot of
+the changes performed to your objects using a <code>Map</code>.</li>
+</ul><h4>
+<a name="conventions" class="anchor" href="#conventions"><span class="octicon octicon-link"></span></a>Conventions</h4>
+
+<p>Throughout this doc, properties/methods of classes will be listed in the following format:</p>
+
+<p><code>property_or_method : [modifiers] Type/ReturnType</code></p>
+
+<h2>
+<a name="event-bus" class="anchor" href="#event-bus"><span class="octicon octicon-link"></span></a>Event Bus</h2>
+
+<p>The <code>EventBus</code> is the backbone for all of the EventQueue/Command/Undo-Redo communications behind the scenes,
+but may be used on its own to fire and listen to (a.k.a. 'publish/subscribe') Events.</p>
+
+<h4>
+<a name="basic-usage" class="anchor" href="#basic-usage"><span class="octicon octicon-link"></span></a>Basic usage</h4>
+
+<div class="highlight highlight-dart"><pre><span class="kd">var</span> <span class="n">event_bus</span> <span class="o">=</span> <span class="k">new</span> <span class="n">EventBus</span><span class="p">();</span>
+
+<span class="n">event_bus</span><span class="p">.</span><span class="n">on</span><span class="p">(</span><span class="n">MyEventType</span><span class="p">,</span> <span class="p">(</span><span class="n">MyEventType</span> <span class="n">event</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="n">doSomething</span><span class="p">());</span>
+
+<span class="n">event_bus</span><span class="p">.</span><span class="n">signal</span><span class="p">(</span><span class="k">new</span> <span class="n">MyEventType</span><span class="p">());</span> <span class="c1">// doSomething() will be called</span>
+</pre></div>
+
+<p>Ideally, only one instance of an <code>EventBus</code> object should be needed for each major scope of your application
+(e.g. client vs server). While using multiple instances is possible, it makes keeping track of events trickier,
+as there is no global/static EventBus object listening to everything (this is a design choice to allow for more flexibility).
+So passing references to a single main <code>EventBus</code> instance is the preferred means of usage.</p>
+
+<h4>
+<a name="eventhandler" class="anchor" href="#eventhandler"><span class="octicon octicon-link"></span></a>EventHandler</h4>
+
+<p>A function that accepts an <code>Event</code>, and is meant to be called whenever an event of the appropriate type is fired.
+Note: since <code>Events</code> allow for inheritance, <code>EventHandler</code> instances should not be reused to listen to multiple
+events of the same super-type, since each EventHandler instance will only be called once per Event firing. Example:</p>
+
+<div class="highlight highlight-dart"><pre><span class="n">myEventHandler</span><span class="p">(</span><span class="n">MyEvent</span> <span class="n">event</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="n">doSomething</span><span class="p">();</span>
+
+<span class="n">event_bus</span><span class="p">..</span><span class="n">on</span><span class="p">(</span><span class="n">MyEvent</span><span class="p">,</span> <span class="n">myEventHandler</span><span class="p">)</span>
+         <span class="p">..</span><span class="n">on</span><span class="p">(</span><span class="n">MyChildEvent</span><span class="p">,</span> <span class="n">myEventHandler</span><span class="p">);</span>  <span class="c1">// where MyChildEvent is a subtype of MyEvent</span>
+
+<span class="n">event_bus</span><span class="p">.</span><span class="n">signal</span><span class="p">(</span><span class="n">MyChildEvent</span><span class="p">);</span>
+<span class="c1">// Will only call myEventHandler() once, despite other handlers for MyEvent also being called.</span>
+
+<span class="c1">// To avoid this, simply assign a different function instance to each listener:</span>
+<span class="n">event_bus</span><span class="p">..</span><span class="n">on</span><span class="p">(</span><span class="n">MyEvent</span><span class="p">,</span> <span class="p">(</span><span class="n">event</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="n">doSomething</span><span class="p">())</span>
+         <span class="p">..</span><span class="n">on</span><span class="p">(</span><span class="n">MyChildEvent</span><span class="p">,</span> <span class="p">(</span><span class="n">event</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="n">doSomething</span><span class="p">());</span>
+
+<span class="n">event_bus</span><span class="p">.</span><span class="n">signal</span><span class="p">(</span><span class="n">MyChildEvent</span><span class="p">);</span>
+<span class="c1">// This time doSomething() will be called twice.</span>
+</pre></div>
+
+<h4>
+<a name="eventlistener" class="anchor" href="#eventlistener"><span class="octicon octicon-link"></span></a>EventListener</h4>
+
+<ul>
+<li><p><code>listens_to : Type</code> - Property that lists what type of <code>Event</code> the listener is listening to.</p></li>
+<li><p><code>handler : EventHandler</code> - The <code>EventHandler</code> function that is called whenever an <code>event</code> of the type
+specified by <code>listens_to</code> is signaled.</p></li>
+<li><p><code>stopListening() : void</code> - Unregisters the listener from its corresponding <code>EventBus</code>, and stops the <code>handler</code>
+from being called and handling future events.</p></li>
+</ul><h4>
+<a name="eventbus" class="anchor" href="#eventbus"><span class="octicon octicon-link"></span></a>EventBus</h4>
+
+<ul>
+<li><p><code>on(Type event_type, void eventHandler(Event event)) : EventListener</code> -
+Registers a function (<code>EventHandler</code>) to get called whenever an event of <code>event_type</code> is signaled.
+Returns an <code>EventListener</code> that can be used to stop the registered <code>EventHandler</code> from handling events.</p></li>
+<li><p><code>signal(Event event) : Future</code> -
+Fires/propagates the event instance passed to it, and sends it to all the appropriate <code>EventHandlers</code> subscribed/listening
+to events of that type. Returns a <code>Future</code> in case some computation needs to happen after all the corresponding
+<code>EventHandlers</code> have been notified of the event.</p></li>
+<li><p><code>stopListener(EventListener listener) : void</code> -
+Same as <code>EventListener.stopListening()</code>. Unregisters an <code>EventHandler</code> function (via its corresponding <code>EventListener</code>)
+from the <code>EventBus</code>. Stops the <code>EventHandler</code> from being called and receiving future events from this <code>EventBus</code> instance.</p></li>
+<li><p><code>clearAllListeners() : void</code> -
+Removes all <code>EventListeners</code>/<code>EventHandlers</code> from the <code>EventBus</code> instance.</p></li>
+<li><p><code>hasListener(EventListener listener) : bool</code> -
+Checks whether the given <code>listener</code> is registered with the <code>EventBus</code> instance.</p></li>
+</ul><h2>
+<a name="event-queue" class="anchor" href="#event-queue"><span class="octicon octicon-link"></span></a>Event Queue</h2>
+
+<p><code>EventQueue</code> is a basic <a href="http://gameprogrammingpatterns.com/event-queue.html">Event/Message Queue</a> implementation
+that populates itself based on <code>Events</code> sent to the <code>EventBus</code>. By default, an <code>EventQueue</code> will listen to all <code>Events</code>,
+but each instance may be configured to only queue up specific event types upon creation:</p>
+
+<p><code>var queue = new EventQueue(event_bus, queue_on: MyEvent);</code></p>
+
+<p>Alternative declaration using generics (yields same result as above):</p>
+
+<p><code>var queue = new EventQueue&lt;MyEvent&gt;(event_bus);</code></p>
+
+<blockquote>
+<p><strong>Note:</strong> Event types specified using generics will override any values passed to the 'queue_on' parameter</p>
+</blockquote>
+
+<h4>
+<a name="sample-usage" class="anchor" href="#sample-usage"><span class="octicon octicon-link"></span></a>Sample usage</h4>
+
+<div class="highlight highlight-dart"><pre><span class="k">while</span><span class="p">(</span><span class="kc">true</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">event_queue</span><span class="p">.</span><span class="n">hasNext</span><span class="p">)</span> <span class="p">{</span>
+       <span class="n">Event</span> <span class="n">event</span> <span class="o">=</span> <span class="n">event_queue</span><span class="p">.</span><span class="n">popNext</span><span class="p">();</span>
+       <span class="n">doSomethingWith</span><span class="p">(</span><span class="n">event</span><span class="p">);</span>
+
+       <span class="c1">// Alternatively, you do not have to remove events</span>
+       <span class="c1">// from the queue to examine them:</span>
+       <span class="n">checkEvent</span><span class="p">(</span><span class="n">event_queue</span><span class="p">.</span><span class="n">peekNext</span><span class="p">());</span>
+    <span class="p">}</span>
+    <span class="c1">// break out of the loop under some condition...</span>
+<span class="p">}</span>
+
+<span class="k">if</span> <span class="p">(</span><span class="n">event_queue</span><span class="p">.</span><span class="n">isActive</span><span class="p">)</span>
+    <span class="n">event_queue</span><span class="p">.</span><span class="n">stopReceivingEvents</span><span class="p">();</span>
+</pre></div>
+
+<h2>
+<a name="events" class="anchor" href="#events"><span class="octicon octicon-link"></span></a>Events</h2>
+
+<p>Custom Events may be created by sub-classing the <code>Event</code> class, and may contain any assortment
+of properties and behaviors like you would find in a regular Dart class.</p>
+
+<div class="highlight highlight-dart"><pre><span class="kd">class</span> <span class="nc">MyEvent</span> <span class="kd">extends</span> <span class="n">Event</span> <span class="p">{</span>
+  <span class="kt">String</span> <span class="n">description</span><span class="p">;</span>
+  <span class="n">MyEvent</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="n">description</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="n">event_bus</span><span class="p">.</span><span class="n">on</span><span class="p">(</span><span class="n">MyEvent</span><span class="p">,</span> <span class="p">(</span><span class="n">event</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="n">doSomething</span><span class="p">());</span>
+
+<span class="n">event_bus</span><span class="p">.</span><span class="n">signal</span><span class="p">(</span><span class="k">new</span> <span class="n">MyEvent</span><span class="p">(</span><span class="s1">'Something happened!'</span><span class="p">))</span><span class="o">:</span>
+</pre></div>
+
+<p>Notice that new instances of your Events should be created every time they're being signaled. This is because
+modifying/reusing the same <em>exact</em> instance of an <code>Event</code> object will break the expected functionality of <code>EventQueues</code>
+(i.e. queueing up the same instance twice and modifying its state, effectively overwrites the event's history, since <code>EventQueue</code>
+does not keep track of <code>Event</code> states and only contains references to the original event objects signaled).
+Additionally, creating events is cheap, and guarding against signaling duplicate event instances helps catch bugs due to
+accidental event firings. The <code>EventBus</code> will display a warning whenever it catches an <code>Event</code> instance getting
+signaled multiple times.</p>
+
+<blockquote>
+<p><strong>Note:</strong> The <code>Event</code> super-class currently comes with a <code>dispatched : bool</code> property that signifies when the event
+instance has been sent out to its respective listeners. It can be manually set after each use to overcome the
+'new-instance-per-signal()' policy, but doing so will break <code>EventQueues</code> as explained above. This feature is liable
+to be deprecated in future versions, so avoid usage of it at all costs.</p>
+</blockquote>
+
+<p>Events also support a multiple-inheritance scheme whereby listeners for a particular Event Type
+may be notified of other Events implementing/extending that same Event Type. This is accomplished
+by adding super-class/parent events to a <code>Set&lt;Type&gt; parents</code> property in your <code>Event</code> class. Example:</p>
+
+<div class="highlight highlight-dart"><pre><span class="kd">class</span> <span class="nc">MyEvent</span> <span class="kd">extends</span> <span class="n">Event</span> <span class="p">{</span>
+  <span class="kt">String</span> <span class="n">description</span><span class="p">;</span>
+  <span class="n">MyEvent</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="n">description</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="kd">class</span> <span class="nc">MyOtherEvent</span> <span class="kd">extends</span> <span class="n">Event</span> <span class="p">{</span>
+  <span class="kt">int</span> <span class="n">number</span><span class="p">;</span>
+  <span class="n">MyOtherEvent</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="n">number</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="c1">// Class must commit to 'implement' MyElement and MyOtherElement to ensure that</span>
+<span class="c1">// listeners of those events can make use of this event</span>
+<span class="kd">class</span> <span class="nc">MultiEvent</span> <span class="kd">extends</span> <span class="n">Event</span> <span class="kd">implements</span> <span class="n">MyEvent</span><span class="p">,</span> <span class="n">MyOtherElement</span> <span class="p">{</span>
+  <span class="kt">int</span> <span class="n">number</span><span class="p">;</span>
+  <span class="kt">String</span> <span class="n">description</span><span class="p">;</span>
+
+  <span class="n">MyChildEvent</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="n">number</span><span class="p">,</span> <span class="k">this</span><span class="p">.</span><span class="n">description</span><span class="p">)</span> <span class="p">{</span>
+    <span class="c1">// This is what will notify listeners of MyEvent and MyOtherEvent</span>
+    <span class="c1">// whenever this event is called:</span>
+    <span class="k">this</span><span class="p">.</span><span class="n">parents</span><span class="p">.</span><span class="n">addAll</span><span class="p">([</span><span class="n">MyEvent</span><span class="p">,</span> <span class="n">MyOtherEvent</span><span class="p">]);</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="n">event_bus</span><span class="p">.</span><span class="n">on</span><span class="p">(</span><span class="n">MyEvent</span><span class="p">,</span> <span class="p">(</span><span class="n">MyEvent</span> <span class="n">e</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="n">doA</span><span class="p">(</span><span class="n">e</span><span class="p">.</span><span class="n">description</span><span class="p">));</span>
+<span class="n">event_bus</span><span class="p">.</span><span class="n">on</span><span class="p">(</span><span class="n">MyOtherEvent</span><span class="p">,</span> <span class="p">(</span><span class="n">MyOtherEvent</span> <span class="n">e</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="n">doB</span><span class="p">(</span><span class="n">e</span><span class="p">.</span><span class="n">number</span><span class="p">));</span>
+
+<span class="n">event_bus</span><span class="p">.</span><span class="n">signal</span><span class="p">(</span><span class="k">new</span> <span class="n">MultiEvent</span><span class="p">(</span><span class="m">1</span><span class="p">,</span> <span class="s1">'event'</span><span class="p">));</span> <span class="c1">// triggers both doA() and doB()</span>
+</pre></div>
+
+<h2>
+<a name="commands" class="anchor" href="#commands"><span class="octicon octicon-link"></span></a>Commands</h2>
+
+<p>A <code>Command</code> is just a function that executes a task, and returns a <code>CommandResult</code>.</p>
+
+<h4>
+<a name="sample-usage-1" class="anchor" href="#sample-usage-1"><span class="octicon octicon-link"></span></a>Sample Usage</h4>
+
+<div class="highlight highlight-dart"><pre><span class="n">basicCommand</span><span class="p">()</span> <span class="p">{</span>
+    <span class="n">doSomething</span><span class="p">();</span>
+    <span class="k">return</span> <span class="k">new</span> <span class="n">CommandResult</span><span class="p">(</span><span class="nl">events:</span> <span class="p">[</span><span class="k">new</span> <span class="n">DidSomethingEvent</span><span class="p">()]);</span>
+<span class="p">}</span>
+<span class="p">...</span>
+<span class="n">Commander</span> <span class="n">commander</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Commander</span><span class="p">(</span><span class="n">event_bus</span><span class="p">);</span>
+<span class="p">...</span>
+<span class="c1">// This will call doSomething(), and fire a DidSomethingEvent</span>
+<span class="n">commander</span><span class="p">.</span><span class="n">execute</span><span class="p">(</span><span class="n">basicCommand</span><span class="p">());</span>
+<span class="c1">// Notice how 'basicCommand' is called before passing it to execute()</span>
+</pre></div>
+
+<h4>
+<a name="commandresult" class="anchor" href="#commandresult"><span class="octicon octicon-link"></span></a>CommandResult</h4>
+
+<p>All the following properties of a <code>CommandResult</code> may be set in the constructor as named parameters (as shown above):</p>
+
+<ul>
+<li><p><code>return_value : dynamic</code> -
+The return value of a command. What will be returned in a <code>Future</code> when <code>Commander.execute()</code> is called.
+Will return <code>null</code> by default.</p></li>
+<li><p><code>events : List&lt;Event&gt;</code> -
+A list of events the command should signal. <code>EventListeners</code> registered to the <code>Commander</code>'s <code>event_bus</code>
+will be notified when the command is executed.</p></li>
+<li><p><code>undoable : bool</code> -
+Whether the command can be undone. If <code>true</code>, it must also assign an <code>EntityState</code> to the <code>state</code> parameter.</p></li>
+<li><p><code>state : EntityState</code> -
+A snapshot of the changes made by the command on some entity/object (described further below).
+Only used when <code>undoable</code> is <code>true</code>.</p></li>
+<li><p><code>execute_first : List&lt;CommandResult&gt;</code> -
+A sequence of <code>CommandResults</code> that should be processed before the current command. Equivalent to calling
+<code>commander.executeSequence(execute_first)</code>.</p></li>
+</ul><h4>
+<a name="commander" class="anchor" href="#commander"><span class="octicon octicon-link"></span></a>Commander</h4>
+
+<p>The object in charge of notifying the <code>EventBus</code> and Undo Stack of actions performed by <code>Commands</code>.
+Each <code>Commander</code> instance must be instantiated with the <code>EventBus</code> it will send <code>Events</code> to.</p>
+
+<ul>
+<li>
+<code>execute(CommandResult result) : Future&lt;dynamic&gt;</code> -
+Despite it's name, this does not actually call your <code>Command</code> function (you must call it yourself, as demonstrated
+in the example above), it only propagates the result to the associated <code>EventBus</code> and logs any state changes to the
+<code>UndoRedoService</code>. It will return whatever your <code>Command</code> listed as its <code>return_value</code>, wrapped in a <code>Future</code>.</li>
+</ul><blockquote>
+<p><strong>Example:</strong> <code>commander.execute(squareCommand(2)).then((result) =&gt; result == 4)</code> will be <code>true</code></p>
+</blockquote>
+
+<ul>
+<li>
+<code>executeSequence(List&lt;CommandResult&gt; results) : Future&lt; List&lt;dynamic&gt; &gt;</code> -
+Executes a sequence of <code>Commands</code> in the order given. Returns a <code>Future</code> with a list of each command's <code>return_value</code>
+in the order executed.</li>
+</ul><blockquote>
+<p><strong>Example:</strong> <code>commander.executeSequence([squareCommand(2), squareCommand(3)])</code> will return <code>[4, 9]</code> inside a <code>Future</code></p>
+</blockquote>
+
+<ul>
+<li><p><code>event_bus : final EventBus</code> -
+The <code>EventBus</code> all the command events will be sent to. Will have been defined in the constructor.</p></li>
+<li><p><code>undo_service : UndoRedoService</code> -
+The object in charge of managing state. A new <code>UndoRedoService</code> instance is created for each <code>Commander</code>.</p></li>
+</ul><h3>
+<a name="undoredo" class="anchor" href="#undoredo"><span class="octicon octicon-link"></span></a>Undo/Redo</h3>
+
+<p>Undo functionality can be implemented easily once state management behaviors are encapsulated as <code>Command</code> functions.
+The undo service provided is a standard linear, stack-like implementation using the <a href="http://en.wikipedia.org/wiki/Memento_pattern">Memento Pattern</a>.
+Modifications made after an <code>undo()</code> call will overwrite any possible <code>redo()</code> states.</p>
+
+<h4>
+<a name="undoable" class="anchor" href="#undoable"><span class="octicon octicon-link"></span></a>Undoable</h4>
+
+<p>Objects must implement the <code>Undoable</code> interface to work with the <code>UndoRedoService</code>. It only requires one method to be implemented:</p>
+
+<p><code>restoreTo(EntityState state) : void</code></p>
+
+<p>This ensures that the object can understand and update itself from <code>EntityStates</code> when when requested to do so.</p>
+
+<h5>
+<a name="sample-usage-2" class="anchor" href="#sample-usage-2"><span class="octicon octicon-link"></span></a>Sample Usage</h5>
+
+<div class="highlight highlight-dart"><pre><span class="kd">class</span> <span class="nc">MyEntity</span> <span class="kd">implements</span> <span class="n">Undoable</span> <span class="p">{</span>
+    <span class="kt">int</span> <span class="n">id</span><span class="p">;</span>
+    <span class="kt">String</span> <span class="n">description</span><span class="p">;</span>
+
+    <span class="n">restoreTo</span><span class="p">(</span><span class="n">EntityState</span> <span class="n">state</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">id</span> <span class="o">=</span> <span class="n">state</span><span class="p">.</span><span class="n">getOrDefaultTo</span><span class="p">(</span><span class="s1">'id'</span><span class="p">,</span> <span class="n">id</span><span class="p">);</span>
+        <span class="n">description</span> <span class="o">=</span> <span class="n">state</span><span class="p">.</span><span class="n">getOrDefaultTo</span><span class="p">(</span><span class="s1">'description'</span><span class="p">,</span> <span class="n">description</span><span class="p">);</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+
+<h4>
+<a name="entitystate" class="anchor" href="#entitystate"><span class="octicon octicon-link"></span></a>EntityState</h4>
+
+<p>The 'memento' object used to store states on the Undo Stack. Requires a <code>Map</code> of an object's current state.</p>
+
+<h5>
+<a name="sample-usage-3" class="anchor" href="#sample-usage-3"><span class="octicon octicon-link"></span></a>Sample Usage</h5>
+
+<div class="highlight highlight-dart"><pre><span class="n">changeDescriptionCommand</span><span class="p">(</span><span class="n">MyEntity</span> <span class="n">entity</span><span class="p">,</span> <span class="kt">String</span> <span class="n">new_description</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">entity</span><span class="p">.</span><span class="n">description</span> <span class="o">=</span> <span class="n">new_description</span><span class="p">;</span>
+    <span class="n">EntityState</span><span class="o">&lt;</span><span class="n">MyEntity</span><span class="o">&gt;</span> <span class="n">state</span> <span class="o">=</span> <span class="k">new</span> <span class="n">EntityState</span><span class="p">.</span><span class="n">change</span><span class="p">(</span><span class="n">entity</span><span class="p">,</span> <span class="p">{</span><span class="s1">'description'</span><span class="o">:</span> <span class="n">entity</span><span class="p">.</span><span class="n">description</span><span class="p">});</span>
+    <span class="k">return</span> <span class="k">new</span> <span class="n">CommandResult</span><span class="p">(</span><span class="nl">undoable:</span> <span class="kc">true</span><span class="p">,</span> <span class="nl">state:</span> <span class="n">state</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+
+<ul>
+<li><p><code>EntityState&lt;EntityType&gt;({Undoable entity, Map&lt;String, dynamic&gt; state})</code> -
+Default constructor, stores the original <code>entity</code> object alongside a <code>Map</code> of its properties.</p></li>
+<li><p><code>EntityState.change(Undoable entity_object, Map&lt;String, dynamic&gt; state)</code> -
+Identical to default constructor, used to explicitly denote state <em>changes</em> of an entity
+(i.e. only properties that have been changed should be included in the <code>state</code> map).</p></li>
+<li><p><code>diff(EntityState other) : EntityState</code> -
+Returns an <code>EntityState</code> with the values in <code>other</code> that are different from the current instance. <em>Example:</em></p></li>
+</ul><div class="highlight highlight-dart"><pre><span class="kd">var</span> <span class="n">stateA</span> <span class="o">=</span> <span class="k">new</span> <span class="n">EntityState</span><span class="p">(</span><span class="nl">entity:</span> <span class="n">my_entity</span><span class="p">,</span> <span class="nl">state:</span> <span class="p">{</span><span class="s1">'name'</span><span class="o">:</span> <span class="s1">'hello'</span><span class="p">,</span> <span class="s1">'id'</span><span class="o">:</span> <span class="m">1</span><span class="p">});</span>
+<span class="kd">var</span> <span class="n">stateB</span> <span class="o">=</span> <span class="k">new</span> <span class="n">EntityState</span><span class="p">(</span><span class="nl">entity:</span> <span class="n">my_entity</span><span class="p">,</span> <span class="nl">state:</span> <span class="p">{</span><span class="s1">'name'</span><span class="o">:</span> <span class="s1">'world'</span><span class="p">,</span> <span class="s1">'id'</span><span class="o">:</span> <span class="m">1</span><span class="p">});</span>
+
+<span class="n">stateA</span><span class="p">.</span><span class="n">diff</span><span class="p">(</span><span class="n">stateB</span><span class="p">);</span> <span class="c1">// returns EntityState({'name': 'world'})</span>
+<span class="n">stateB</span><span class="p">.</span><span class="n">diff</span><span class="p">(</span><span class="n">stateA</span><span class="p">);</span> <span class="c1">// returns EntityState({'name': 'hello'})</span>
+</pre></div>
+
+<ul>
+<li><p><code>getOrDefaultTo(String property, dynamic default_value) : dynamic</code> -
+Checks whether the <code>EntityState</code> contains the <code>property</code> specified, otherwise returns the given <code>default_value</code>.</p></li>
+<li><p><code>contains(String property) : bool</code> -
+Checks whether the <code>EntityState</code> contains the <code>property</code> specified.</p></li>
+<li><p><code>forEach(void f(property, value))</code> - Iterates over each property-value pair in the <code>EntityState</code></p></li>
+<li><p><code>properties : Set&lt;String&gt;</code> - The set of of the properties in the state</p></li>
+<li><p><code>entity : Undoable</code> - The object the EntityState represents.</p></li>
+</ul><h4>
+<a name="undoredoservice" class="anchor" href="#undoredoservice"><span class="octicon octicon-link"></span></a>UndoRedoService</h4>
+
+<p>Each <code>Commander</code> instance manages an <code>UndoRedoService</code>. If you want to be able to undo states for certain components
+separately, you should create a new <code>Commander</code> for each of the components whose state you wish to track.</p>
+
+<ul>
+<li><p><code>stack_size : int</code> - How many states are currently saved on the stack</p></li>
+<li><p><code>canUndo : bool</code> - Whether calling <code>undo()</code> would be a valid operation in the current state</p></li>
+<li><p><code>canRedo : bool</code> - Whether calling <code>redo()</code> would be a valid operation in the current state</p></li>
+<li><p><code>recordState(EntityState state) : void</code> - Saves an <code>EntityState</code> onto the stack. Does not need to be called directly
+when using a <code>Commander</code></p></li>
+<li><p><code>clear() : void</code> - Removes all the states currently stored on the stack</p></li>
+<li><p><code>undo() : void</code> - Undoes the last command sent to the <code>Commander</code></p></li>
+<li><p><code>redo() : void</code> - Reapplies the last command that was undone</p></li>
+</ul><h2>
+<a name="install" class="anchor" href="#install"><span class="octicon octicon-link"></span></a>Install</h2>
+
+<p>Add <code>event_commander</code> to your <code>pubspec.yaml</code> file to install it from pub:</p>
+
+<pre><code>dependencies:
+  event_commander: any
+</code></pre>
+
+<p>or keep up with the latest developments on this git repo:</p>
+
+<pre><code>dependencies:
+  event_commander:
+    git: https://github.com/oblique63/EventCommander.git
+</code></pre>
+
+<p>then just run <code>$ pub get</code> and you'll be all set to go.</p>
+
+<p><strong>EventCommander</strong> has no additional/external dependencies, and is compatible with both client-side and server-side code.</p>
+
+<h3>
+<a name="import" class="anchor" href="#import"><span class="octicon octicon-link"></span></a>Import</h3>
+
+<p>For <em>Event Bus</em> and <em>Event Queue</em> features only:</p>
+
+<p><code>import 'package:event_commander/event_bus.dart';</code></p>
+
+<p>For <em>Event Bus</em>, <em>Event Queue</em>, and <em>Command/Undo</em> features:</p>
+
+<p><code>import 'package:event_commander/event_commander.dart';</code></p>
+      </section>
+    </div>
+    <footer>
+      <p>Project maintained by <a href="https://github.com/oblique63">oblique63</a></p>
+      <p>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></p>
+    </footer>
+    <!--[if !IE]><script>fixScale(document);</script><![endif]-->
+    
+  </body>
+</html>
