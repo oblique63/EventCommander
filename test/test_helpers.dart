@@ -5,7 +5,7 @@ after(future, void expectThings(return_value)) {
         future = Future.wait(future);
     }
     else if (future is! Future) {
-        future = new Future.value(future);
+        future = new Future(() => future);
     }
 
     expect(future, completion((return_value) {
