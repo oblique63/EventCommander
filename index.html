@@ -82,11 +82,13 @@ events of the same super-type, since each EventHandler instance will only be cal
 
 <div class="highlight highlight-dart"><pre><span class="n">myEventHandler</span><span class="p">(</span><span class="n">MyEvent</span> <span class="n">event</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="n">doSomething</span><span class="p">();</span>
 
+<span class="c1">// Where MyChildEvent is a subtype of MyEvent</span>
 <span class="n">event_bus</span><span class="p">..</span><span class="n">on</span><span class="p">(</span><span class="n">MyEvent</span><span class="p">,</span> <span class="n">myEventHandler</span><span class="p">)</span>
-         <span class="p">..</span><span class="n">on</span><span class="p">(</span><span class="n">MyChildEvent</span><span class="p">,</span> <span class="n">myEventHandler</span><span class="p">);</span>  <span class="c1">// where MyChildEvent is a subtype of MyEvent</span>
+         <span class="p">..</span><span class="n">on</span><span class="p">(</span><span class="n">MyChildEvent</span><span class="p">,</span> <span class="n">myEventHandler</span><span class="p">);</span>
 
 <span class="n">event_bus</span><span class="p">.</span><span class="n">signal</span><span class="p">(</span><span class="n">MyChildEvent</span><span class="p">);</span>
-<span class="c1">// Will only call myEventHandler() once, despite other handlers for MyEvent also being called.</span>
+<span class="c1">// Will only call myEventHandler() once, despite other handlers for MyEvent</span>
+<span class="c1">// also being called.</span>
 
 <span class="c1">// To avoid this, simply assign a different function instance to each listener:</span>
 <span class="n">event_bus</span><span class="p">..</span><span class="n">on</span><span class="p">(</span><span class="n">MyEvent</span><span class="p">,</span> <span class="p">(</span><span class="n">event</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="n">doSomething</span><span class="p">())</span>
@@ -235,9 +237,9 @@ by adding super-class/parent events to a <code>Set&lt;Type&gt; parents</code> pr
     <span class="n">doSomething</span><span class="p">();</span>
     <span class="k">return</span> <span class="k">new</span> <span class="n">CommandResult</span><span class="p">(</span><span class="nl">events:</span> <span class="p">[</span><span class="k">new</span> <span class="n">DidSomethingEvent</span><span class="p">()]);</span>
 <span class="p">}</span>
-<span class="p">...</span>
+
 <span class="n">Commander</span> <span class="n">commander</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Commander</span><span class="p">(</span><span class="n">event_bus</span><span class="p">);</span>
-<span class="p">...</span>
+
 <span class="c1">// This will call doSomething(), and fire a DidSomethingEvent</span>
 <span class="n">commander</span><span class="p">.</span><span class="n">execute</span><span class="p">(</span><span class="n">basicCommand</span><span class="p">());</span>
 <span class="c1">// Notice how 'basicCommand' is called before passing it to execute()</span>
@@ -333,7 +335,9 @@ Modifications made after an <code>undo()</code> call will overwrite any possible
 
 <div class="highlight highlight-dart"><pre><span class="n">changeDescriptionCommand</span><span class="p">(</span><span class="n">MyEntity</span> <span class="n">entity</span><span class="p">,</span> <span class="kt">String</span> <span class="n">new_description</span><span class="p">)</span> <span class="p">{</span>
     <span class="n">entity</span><span class="p">.</span><span class="n">description</span> <span class="o">=</span> <span class="n">new_description</span><span class="p">;</span>
-    <span class="n">EntityState</span><span class="o">&lt;</span><span class="n">MyEntity</span><span class="o">&gt;</span> <span class="n">state</span> <span class="o">=</span> <span class="k">new</span> <span class="n">EntityState</span><span class="p">.</span><span class="n">change</span><span class="p">(</span><span class="n">entity</span><span class="p">,</span> <span class="p">{</span><span class="s1">'description'</span><span class="o">:</span> <span class="n">entity</span><span class="p">.</span><span class="n">description</span><span class="p">});</span>
+    <span class="n">EntityState</span><span class="o">&lt;</span><span class="n">MyEntity</span><span class="o">&gt;</span> <span class="n">state</span> <span class="o">=</span> <span class="k">new</span> <span class="n">EntityState</span><span class="p">.</span><span class="n">change</span><span class="p">(</span><span class="n">entity</span><span class="p">,</span> <span class="p">{</span>
+        <span class="s1">'description'</span><span class="o">:</span> <span class="n">entity</span><span class="p">.</span><span class="n">description</span>
+    <span class="p">});</span>
     <span class="k">return</span> <span class="k">new</span> <span class="n">CommandResult</span><span class="p">(</span><span class="nl">undoable:</span> <span class="kc">true</span><span class="p">,</span> <span class="nl">state:</span> <span class="n">state</span><span class="p">);</span>
 <span class="p">}</span>
 </pre></div>
