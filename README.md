@@ -47,11 +47,13 @@ events of the same super-type, since each EventHandler instance will only be cal
 ```dart
 myEventHandler(MyEvent event) => doSomething();
 
+// Where MyChildEvent is a subtype of MyEvent
 event_bus..on(MyEvent, myEventHandler)
-         ..on(MyChildEvent, myEventHandler);  // where MyChildEvent is a subtype of MyEvent
+         ..on(MyChildEvent, myEventHandler);
 
 event_bus.signal(MyChildEvent);
-// Will only call myEventHandler() once, despite other handlers for MyEvent also being called.
+// Will only call myEventHandler() once, despite other handlers for MyEvent
+// also being called.
 
 // To avoid this, simply assign a different function instance to each listener:
 event_bus..on(MyEvent, (event) => doSomething())
@@ -192,9 +194,9 @@ basicCommand() {
     doSomething();
     return new CommandResult(events: [new DidSomethingEvent()]);
 }
-...
+
 Commander commander = new Commander(event_bus);
-...
+
 // This will call doSomething(), and fire a DidSomethingEvent
 commander.execute(basicCommand());
 // Notice how 'basicCommand' is called before passing it to execute()
@@ -279,7 +281,9 @@ The 'memento' object used to store states on the Undo Stack. Requires a `Map` of
 ```dart
 changeDescriptionCommand(MyEntity entity, String new_description) {
     entity.description = new_description;
-    EntityState<MyEntity> state = new EntityState.change(entity, {'description': entity.description});
+    EntityState<MyEntity> state = new EntityState.change(entity, {
+        'description': entity.description
+    });
     return new CommandResult(undoable: true, state: state);
 }
 ```
