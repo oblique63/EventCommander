@@ -358,7 +358,7 @@ or keep up with the latest developments on this git repo:
 
 then just run `$ pub get` and you'll be all set to go.
 
-__EventCommander__ has no additional/external dependencies, and is compatible with both _client-side_ and _server-side_ code.
+__EventCommander__ has no additional/external dependencies, does not rely on `dart:mirrors`, and is compatible with both _client-side_ and _server-side_ code.
 
 ### Import
 For _Event Bus_ and _Event Queue_ features only:
