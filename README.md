@@ -323,7 +323,8 @@ Checks whether the `EntityState` contains the `property` specified.
 
 #### UndoRedoService
 Each `Commander` instance manages an `UndoRedoService`. If you want to be able to undo states for certain components
-separately, you should create a new `Commander` for each of the components whose state you wish to track.
+separately, you should create a new `Commander` for each of the components whose state you wish to track. `UndoRedoServices`
+can also be instantiated directly for manual `EntityState` management.
 
 * `stack_size : int` - How many states are currently saved on the stack
 
@@ -356,7 +357,7 @@ or keep up with the latest developments on this git repo:
 
 then just run `$ pub get` and you'll be all set to go.
 
-__EventCommander__ has no additional/external dependencies, and is compatible with both client-side and server-side code.
+__EventCommander__ has no additional/external dependencies, and is compatible with both _client-side_ and _server-side_ code.
 
 ### Import
 For _Event Bus_ and _Event Queue_ features only:
