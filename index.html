@@ -237,6 +237,74 @@ by adding super-class/parent events to a <code>Set&lt;Type&gt; parents</code> pr
 <span class="n">event_bus</span><span class="p">.</span><span class="n">signal</span><span class="p">(</span><span class="k">new</span> <span class="n">MultiEvent</span><span class="p">(</span><span class="m">1</span><span class="p">,</span> <span class="s1">'event'</span><span class="p">));</span> <span class="c1">// triggers both doA() and doB()</span>
 </pre></div>
 
+<h4>
+<a name="best-practices" class="anchor" href="#best-practices"><span class="octicon octicon-link"></span></a>Best Practices</h4>
+
+<p><code>Events</code> should be nothing more than simple lightweight wrappers with the real entity objects as properties,
+so objects that need to be dealt with/mutated aren't tied to event instances themselves. In essence, <code>Events</code> are
+just vehicles to get entities/data from one place to another, so they should not be used as a source of data on
+their own. Example:</p>
+
+<div class="highlight highlight-dart"><pre><span class="c1">// Recommended Usage</span>
+<span class="kd">class</span> <span class="nc">ChangeEntityEvent</span> <span class="kd">extends</span> <span class="n">Event</span> <span class="p">{</span>
+    <span class="n">MyEntity</span> <span class="n">entity</span><span class="p">;</span> <span class="c1">// this is the entity/instance you wish to keep track of</span>
+    <span class="n">ChangeEntityEvent</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="n">entity</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="c1">// Not Recommended</span>
+<span class="kd">class</span> <span class="nc">MyEntityEvent</span> <span class="kd">extends</span> <span class="n">Event</span> <span class="p">{</span>
+    <span class="kt">int</span> <span class="n">id</span><span class="p">;</span>
+    <span class="kt">String</span> <span class="n">name</span><span class="p">;</span>
+    <span class="c1">// More entity data here...</span>
+
+    <span class="n">MyEntityEvent</span><span class="p">();</span>
+<span class="p">}</span>
+</pre></div>
+
+<p>This leads to less reliance on <code>Event</code> instances, and easier tracking of entities/models.</p>
+
+<h4>
+<a name="dynamic-events" class="anchor" href="#dynamic-events"><span class="octicon octicon-link"></span></a>Dynamic Events</h4>
+
+<p>These are not built-in classes/features of the library, but they may be useful in cases where event data can't be predicted.
+Thanks to Dart's optional type system, handling dynamic data is simple, but may require additional checking from <code>EventHandlers</code>.</p>
+
+<p><strong>DataEvent Pattern:</strong> An event for dealing with arbitrary data</p>
+
+<div class="highlight highlight-dart"><pre><span class="kd">class</span> <span class="nc">DataEvent</span> <span class="kd">extends</span> <span class="n">Event</span> <span class="p">{</span>
+    <span class="n">Map</span><span class="o">&lt;</span><span class="kt">String</span><span class="p">,</span> <span class="n">dynamic</span><span class="o">&gt;</span> <span class="n">data</span><span class="p">;</span>
+    <span class="n">EntityEvent</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="n">data</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="n">eventBus</span><span class="p">.</span><span class="n">signal</span><span class="p">(</span><span class="k">new</span> <span class="n">EntityEvent</span><span class="p">({</span>
+    <span class="s1">'entity'</span><span class="o">:</span> <span class="n">my_entity</span><span class="p">,</span>
+    <span class="s1">'event_description'</span><span class="o">:</span> <span class="s1">'something happened'</span>
+<span class="p">}));</span>
+
+<span class="n">eventBus</span><span class="p">.</span><span class="n">on</span><span class="p">(</span><span class="n">EntityEvent</span><span class="p">,</span> <span class="p">(</span><span class="n">event</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">event</span><span class="p">.</span><span class="n">entities</span><span class="p">.</span><span class="n">containsKey</span><span class="p">(</span><span class="s1">'entity'</span><span class="p">))</span> <span class="p">{</span>
+        <span class="n">doSomethingWith</span><span class="p">(</span><span class="n">event</span><span class="p">.</span><span class="n">entities</span><span class="p">[</span><span class="s1">'entity'</span><span class="p">]);</span>
+        <span class="n">log</span><span class="p">(</span><span class="n">event</span><span class="p">[</span><span class="s1">'event_description'</span><span class="p">]);</span>
+    <span class="p">}</span>
+<span class="p">});</span>
+</pre></div>
+
+<p><strong>DynamicEvent Pattern:</strong> An event for dealing with arbitrary objects</p>
+
+<div class="highlight highlight-dart"><pre><span class="kd">class</span> <span class="nc">DynamicEvent</span> <span class="kd">extends</span> <span class="n">Event</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="n">entity</span><span class="p">;</span>
+    <span class="n">DynamicEvent</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="n">entity</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="n">eventBus</span><span class="p">.</span><span class="n">signal</span><span class="p">(</span><span class="k">new</span> <span class="n">DynamicEvent</span><span class="p">(</span><span class="n">my_entity</span><span class="p">));</span>
+
+<span class="n">eventBus</span><span class="p">.</span><span class="n">on</span><span class="p">(</span><span class="n">DynamicEvent</span><span class="p">,</span> <span class="p">(</span><span class="n">event</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">event</span><span class="p">.</span><span class="n">entity</span> <span class="k">is</span> <span class="n">MyEntity</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">doSomethingWith</span><span class="p">(</span><span class="n">event</span><span class="p">.</span><span class="n">entity</span><span class="p">);</span>
+    <span class="p">}</span>
+<span class="p">});</span>
+</pre></div>
+
 <h2>
 <a name="commands" class="anchor" href="#commands"><span class="octicon octicon-link"></span></a>Commands</h2>
 
