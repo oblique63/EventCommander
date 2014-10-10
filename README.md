@@ -215,7 +215,8 @@ class MyEntityEvent extends Event {
 This leads to less reliance on `Event` instances, and easier tracking of entities/models.
 
 #### Dynamic Events
-These are not built-in classes/features of the library, but in cases where event data can't be predicted, they may be useful:
+These are not built-in classes/features of the library, but they may be useful in cases where event data can't be predicted.
+Thanks to Dart's optional type system, handling dynamic data is simple, but may require additional checking from `EventHandlers`.
 
 __DataEvent Pattern:__ An event for dealing with arbitrary data
 
