@@ -4,6 +4,7 @@ part of event_commander;
  * In charge of notifying the [EventBus] and [UndoRedoService] of actions performed by [Commands].
  */
 class Commander {
+    /// The [EventBus] that will be used to signal events fired from Commands
     final EventBus
         event_bus;
     final UndoRedoService

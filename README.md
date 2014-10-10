@@ -189,6 +189,72 @@ event_bus.on(MyOtherEvent, (MyOtherEvent e) => doB(e.number));
 event_bus.signal(new MultiEvent(1, 'event')); // triggers both doA() and doB()
 ```
 
+#### Best Practices
+`Events` should be nothing more than simple lightweight wrappers with the real entity objects as properties,
+so objects that need to be dealt with/mutated aren't tied to event instances themselves. In essence, `Events` are
+just vehicles to get entities/data from one place to another, so they should not be used as a source of data on
+their own. Example:
+
+```dart
+// Recommended Usage
+class ChangeEntityEvent extends Event {
+    MyEntity entity; // this is the entity/instance you wish to keep track of
+    ChangeEntityEvent(this.entity);
+}
+
+// Not Recommended
+class MyEntityEvent extends Event {
+    int id;
+    String name;
+    // More entity data here...
+
+    MyEntityEvent();
+}
+```
+
+This leads to less reliance on `Event` instances, and easier tracking of entities/models.
+
+#### Dynamic Events
+These are not built-in classes/features of the library, but in cases where event data can't be predicted, they may be useful:
+
+__DataEvent Pattern:__ An event for dealing with arbitrary data
+
+```dart
+class DataEvent extends Event {
+    Map<String, dynamic> data;
+    EntityEvent(this.data);
+}
+
+eventBus.signal(new EntityEvent({
+    'entity': my_entity,
+    'event_description': 'something happened'
+}));
+
+eventBus.on(EntityEvent, (event) {
+    if (event.entities.containsKey('entity')) {
+        doSomethingWith(event.entities['entity']);
+        log(event['event_description']);
+    }
+});
+```
+
+__DynamicEvent Pattern:__ An event for dealing with arbitrary objects
+
+```dart
+class DynamicEvent extends Event {
+    var entity;
+    DynamicEvent(this.entity);
+}
+
+eventBus.signal(new DynamicEvent(my_entity));
+
+eventBus.on(DynamicEvent, (event) {
+    if (event.entity is MyEntity) {
+        doSomethingWith(event.entity);
+    }
+});
+```
+
 ## Commands
 A `Command` is just a function that executes a task, and returns a `CommandResult`.
 
