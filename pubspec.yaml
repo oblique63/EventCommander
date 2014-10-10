@@ -1,6 +1,6 @@
 name: event_commander
 description: An EventBus, EventQueue, Command Pattern, and Undo-Redo library
-version: 0.1.8+1
+version: 0.1.8+2
 homepage: http://oblique63.github.io/EventCommander/
 author: Enrique Gavidia <enrique@enriquegavidia.com>
 

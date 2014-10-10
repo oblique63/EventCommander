@@ -359,25 +359,26 @@ changeDescriptionCommand(MyEntity entity, String new_description) {
 }
 ```
 
-* `EntityState<EntityType>({Undoable entity, Map<String, dynamic> state})` -
+* `EntityState<EntityType>(Undoable entity, Map<String, dynamic> state)` -
 Default constructor, stores the original `entity` object alongside a `Map` of its properties.
 
-* `EntityState.change(Undoable entity_object, Map<String, dynamic> state)` -
+* `EntityState.change(Undoable entity, Map<String, dynamic> state)` -
 Identical to default constructor, used to explicitly denote state _changes_ of an entity
 (i.e. only properties that have been changed should be included in the `state` map).
 
 * `diff(EntityState other) : EntityState` -
 Returns an `EntityState` with the values in `other` that are different from the current instance. _Example:_
 ```dart
-var stateA = new EntityState(entity: my_entity, state: {'name': 'hello', 'id': 1});
-var stateB = new EntityState(entity: my_entity, state: {'name': 'world', 'id': 1});
+var stateA = new EntityState(my_entity, {'name': 'hello', 'id': 1});
+var stateB = new EntityState(my_entity, {'name': 'world', 'id': 1});
 
-stateA.diff(stateB); // returns EntityState({'name': 'world'})
-stateB.diff(stateA); // returns EntityState({'name': 'hello'})
+stateA.diff(stateB); // returns EntityState(my_entity, {'name': 'world'})
+stateB.diff(stateA); // returns EntityState(my_entity, {'name': 'hello'})
 ```
 
 * `getOrDefaultTo(String property, dynamic default_value) : dynamic` -
 Checks whether the `EntityState` contains the `property` specified, otherwise returns the given `default_value`.
+Useful when implementing the `restoreTo()` method of the `Undoable` interface.
 
 * `contains(String property) : bool` -
 Checks whether the `EntityState` contains the `property` specified.
