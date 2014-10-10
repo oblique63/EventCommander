@@ -431,25 +431,26 @@ Modifications made after an <code>undo()</code> call will overwrite any possible
 </pre></div>
 
 <ul>
-<li><p><code>EntityState&lt;EntityType&gt;({Undoable entity, Map&lt;String, dynamic&gt; state})</code> -
+<li><p><code>EntityState&lt;EntityType&gt;(Undoable entity, Map&lt;String, dynamic&gt; state)</code> -
 Default constructor, stores the original <code>entity</code> object alongside a <code>Map</code> of its properties.</p></li>
-<li><p><code>EntityState.change(Undoable entity_object, Map&lt;String, dynamic&gt; state)</code> -
+<li><p><code>EntityState.change(Undoable entity, Map&lt;String, dynamic&gt; state)</code> -
 Identical to default constructor, used to explicitly denote state <em>changes</em> of an entity
 (i.e. only properties that have been changed should be included in the <code>state</code> map).</p></li>
 <li><p><code>diff(EntityState other) : EntityState</code> -
 Returns an <code>EntityState</code> with the values in <code>other</code> that are different from the current instance. <em>Example:</em></p></li>
 </ul>
 
-<div class="highlight highlight-dart"><pre><span class="kd">var</span> <span class="n">stateA</span> <span class="o">=</span> <span class="k">new</span> <span class="n">EntityState</span><span class="p">(</span><span class="nl">entity:</span> <span class="n">my_entity</span><span class="p">,</span> <span class="nl">state:</span> <span class="p">{</span><span class="s1">'name'</span><span class="o">:</span> <span class="s1">'hello'</span><span class="p">,</span> <span class="s1">'id'</span><span class="o">:</span> <span class="m">1</span><span class="p">});</span>
-<span class="kd">var</span> <span class="n">stateB</span> <span class="o">=</span> <span class="k">new</span> <span class="n">EntityState</span><span class="p">(</span><span class="nl">entity:</span> <span class="n">my_entity</span><span class="p">,</span> <span class="nl">state:</span> <span class="p">{</span><span class="s1">'name'</span><span class="o">:</span> <span class="s1">'world'</span><span class="p">,</span> <span class="s1">'id'</span><span class="o">:</span> <span class="m">1</span><span class="p">});</span>
+<div class="highlight highlight-dart"><pre><span class="kd">var</span> <span class="n">stateA</span> <span class="o">=</span> <span class="k">new</span> <span class="n">EntityState</span><span class="p">(</span><span class="n">my_entity</span><span class="p">,</span> <span class="p">{</span><span class="s1">'name'</span><span class="o">:</span> <span class="s1">'hello'</span><span class="p">,</span> <span class="s1">'id'</span><span class="o">:</span> <span class="m">1</span><span class="p">});</span>
+<span class="kd">var</span> <span class="n">stateB</span> <span class="o">=</span> <span class="k">new</span> <span class="n">EntityState</span><span class="p">(</span><span class="n">my_entity</span><span class="p">,</span> <span class="p">{</span><span class="s1">'name'</span><span class="o">:</span> <span class="s1">'world'</span><span class="p">,</span> <span class="s1">'id'</span><span class="o">:</span> <span class="m">1</span><span class="p">});</span>
 
-<span class="n">stateA</span><span class="p">.</span><span class="n">diff</span><span class="p">(</span><span class="n">stateB</span><span class="p">);</span> <span class="c1">// returns EntityState({'name': 'world'})</span>
-<span class="n">stateB</span><span class="p">.</span><span class="n">diff</span><span class="p">(</span><span class="n">stateA</span><span class="p">);</span> <span class="c1">// returns EntityState({'name': 'hello'})</span>
+<span class="n">stateA</span><span class="p">.</span><span class="n">diff</span><span class="p">(</span><span class="n">stateB</span><span class="p">);</span> <span class="c1">// returns EntityState(my_entity, {'name': 'world'})</span>
+<span class="n">stateB</span><span class="p">.</span><span class="n">diff</span><span class="p">(</span><span class="n">stateA</span><span class="p">);</span> <span class="c1">// returns EntityState(my_entity, {'name': 'hello'})</span>
 </pre></div>
 
 <ul>
 <li><p><code>getOrDefaultTo(String property, dynamic default_value) : dynamic</code> -
-Checks whether the <code>EntityState</code> contains the <code>property</code> specified, otherwise returns the given <code>default_value</code>.</p></li>
+Checks whether the <code>EntityState</code> contains the <code>property</code> specified, otherwise returns the given <code>default_value</code>.
+Useful when implementing the <code>restoreTo()</code> method of the <code>Undoable</code> interface.</p></li>
 <li><p><code>contains(String property) : bool</code> -
 Checks whether the <code>EntityState</code> contains the <code>property</code> specified.</p></li>
 <li><p><code>forEach(void f(property, value))</code> - Iterates over each property-value pair in the <code>EntityState</code></p></li>
