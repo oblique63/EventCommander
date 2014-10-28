@@ -38,6 +38,8 @@ class EventBus {
         });
     }
 
+    // TODO: signalMultiple() ?
+
     /// Checks whether the given [EventListener] instance is registered with the EventBus instance.
     bool
     hasListener(EventListener listener) => _hasSubscriber(listener.listens_to, listener.handler);

@@ -2,7 +2,7 @@ part of event_commander.test;
 
 after(future, void expectThings(return_value)) {
     if (future is List) {
-        future = Future.wait(future);
+        future = Future.wait(future, eagerError: true);
     }
     else if (future is! Future) {
         future = new Future(() => future);
