@@ -218,28 +218,28 @@ This leads to less reliance on `Event` instances, and easier tracking of entitie
 These are not built-in classes/features of the library, but they may be useful in cases where event data can't be predicted.
 Thanks to Dart's optional type system, handling dynamic data is simple, but may require additional checking from `EventHandlers`.
 
-__DataEvent Pattern:__ An event for dealing with arbitrary data
+__DataEvent Pattern:__ An event for dealing with arbitrary data, useful when needing to include multiple arbitrary objects
 
 ```dart
 class DataEvent extends Event {
     Map<String, dynamic> data;
-    EntityEvent(this.data);
+    DataEvent(this.data);
 }
 
-eventBus.signal(new EntityEvent({
-    'entity': my_entity,
-    'event_description': 'something happened'
+eventBus.signal(new DataEvent({
+    'entity1': entity1,
+    'entity2': entity2
 }));
 
-eventBus.on(EntityEvent, (event) {
-    if (event.entities.containsKey('entity')) {
-        doSomethingWith(event.entities['entity']);
-        log(event['event_description']);
+eventBus.on(DataEvent, (event) {
+    if (event.data.containsKey('entity1')) {
+        doSomethingWith(event.data['entity1']);
+        doSomethingElseWith(event.data['entity2']);
     }
 });
 ```
 
-__DynamicEvent Pattern:__ An event for dealing with arbitrary objects
+__DynamicEvent Pattern:__ An event for dealing with arbitrary objects, useful when passing around single objects of varying types
 
 ```dart
 class DynamicEvent extends Event {
